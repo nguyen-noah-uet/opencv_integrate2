@@ -1,14 +1,11 @@
 package com.example.opencv_integrate2;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -16,76 +13,71 @@ import android.widget.Toast;
 
 import org.opencv.android.CameraActivity;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCamera2View;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends CameraActivity {
-    CustomCamera cameraBridgeViewBase;
+    CustomCamera customCamera;
     Button afButton;
     boolean af = false;
+
+    private void bindViews() {
+        customCamera = findViewById(R.id.cameraView);
+        afButton = findViewById(R.id.afButton);
+    }
+    private void wireEvents() {
+        afButton.setOnClickListener(v -> {
+            try {
+                af = !af;
+                customCamera.setAutoFocusMode(af);
+                if (!af) {
+                    customCamera.setFocusDistance(2.3f);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
+            @Override
+            public void onCameraViewStarted(int width, int height) {}
+            @Override
+            public void onCameraViewStopped() {}
+            @Override
+            public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+                Mat rgba = inputFrame.rgba();
+
+                Mat gray = inputFrame.gray();
+                // rotate to portrait
+                Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+
+                return rgba;
+            }
+        });
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
-
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            afButton = findViewById(R.id.afButton);
-            afButton.setOnClickListener(v -> {
-                try {
-                    af = !af;
-                    cameraBridgeViewBase.setAutoFocusMode(af);
-                    if (af == false) {
-                        cameraBridgeViewBase.setFocusDistance(10.1f);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            cameraBridgeViewBase = findViewById(R.id.cameraView);
-            cameraBridgeViewBase.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
-                @Override
-                public void onCameraViewStarted(int width, int height) {
-                }
-
-                @Override
-                public void onCameraViewStopped() {
-                }
-
-                @Override
-                public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-                    Mat rgba = inputFrame.rgba();
-
-                    Mat gray = inputFrame.gray();
-                    // rotate to portrait
-                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
-
-//                    Imgproc.Canny(gray, gray, 90, 100);
-//                    Core.bitwise_not(gray, gray);
-                    return rgba;
-                }
-            });
+            bindViews();
+            wireEvents();
 
             if (!OpenCVLoader.initDebug()) {
                 Log.e("OpenCVhuhuuh", "Unable to load OpenCV!");
-
             } else {
                 Log.d("OpenCVhuhuuh", "OpenCV loaded Successfully!");
                 try {
-                    cameraBridgeViewBase.enableView();
+                    customCamera.enableView();
                     // set back camera
-                    cameraBridgeViewBase.setCameraIndex(0);
+                    customCamera.setCameraIndex(0);
                     Toast.makeText(this, "opencv loaded success....", Toast.LENGTH_SHORT).show();
-
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -104,25 +96,25 @@ public class MainActivity extends CameraActivity {
 
     @Override
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
-        return Collections.singletonList(cameraBridgeViewBase);
+        return Collections.singletonList(customCamera);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        cameraBridgeViewBase.enableView();
+        customCamera.enableView();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        cameraBridgeViewBase.disableView();
+        customCamera.disableView();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        cameraBridgeViewBase.disableView();
+        customCamera.disableView();
     }
 
     private void getPermission() {
