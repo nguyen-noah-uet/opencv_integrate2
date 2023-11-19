@@ -24,6 +24,7 @@ public class MainActivity extends CameraActivity {
     CustomCamera customCamera;
     Button afButton;
     boolean af = false;
+    ObjectDetection ob;
 
     private void bindViews() {
         customCamera = findViewById(R.id.cameraView);
@@ -50,17 +51,19 @@ public class MainActivity extends CameraActivity {
             public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
                 Mat rgba = inputFrame.rgba();
 
-                Mat gray = inputFrame.gray();
+                Mat frame = ob.CascadeRec(rgba);
                 // rotate to portrait
-                Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+//                Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
 
-                return rgba;
+                return frame;
             }
         });
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        ob = new ObjectDetection(getApplicationContext());
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
