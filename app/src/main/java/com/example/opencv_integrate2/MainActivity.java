@@ -53,7 +53,7 @@ public class MainActivity extends CameraActivity {
 
                 Mat frame = ob.CascadeRec(rgba);
                 // rotate to portrait
-//                Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+                Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
 
                 return frame;
             }
