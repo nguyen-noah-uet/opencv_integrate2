@@ -29,6 +29,7 @@ import java.util.List;
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
     CustomCamera customCamera;
+
     SwitchCompat customAFSwitch;
     Slider focusDistanceSlider;
     TextView focusDistanceTV;
@@ -49,6 +50,8 @@ public class MainActivity extends CameraActivity {
     boolean flag = false;
     int skipNum = 5;
     int skipCounter = 0;
+    ObjectDetection ob;
+
 
     double prevDistance = 0.0;
     int iteration = 0;
@@ -106,7 +109,9 @@ public class MainActivity extends CameraActivity {
             public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
-                
+               
+
+                Mat frame = ob.CascadeRec(rgba);
                 // rotate to portrait
                 Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                 try {
@@ -116,10 +121,12 @@ public class MainActivity extends CameraActivity {
                     double sharpness = calculateSharpness(I);
                     runOnUiThread(() -> sharpnessTV.setText(String.format("Sharpness: %.2f", sharpness)));
 
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                return rgba;
+
+                return frame;
 
             }
         });
@@ -253,6 +260,8 @@ public class MainActivity extends CameraActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        ob = new ObjectDetection(getApplicationContext());
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
