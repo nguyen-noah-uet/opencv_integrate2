@@ -20,11 +20,15 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import kotlin.Pair;
 
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
@@ -111,7 +115,18 @@ public class MainActivity extends CameraActivity {
                 Mat I = inputFrame.gray();
                
 
-                Mat frame = ob.CascadeRec(rgba);
+                Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+                Mat frame = results.component1();
+                Rect roiRect = results.component2();
+
+                Mat roi = new Mat(frame, roiRect);
+                /// xử lý roi ở đây
+
+                Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+
+                // frame có dạng rgba
+                // tạo ra một vùng roi để tiến hành tính sharpness tại vùng đấy
+
                 // rotate to portrait
                 Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                 try {
