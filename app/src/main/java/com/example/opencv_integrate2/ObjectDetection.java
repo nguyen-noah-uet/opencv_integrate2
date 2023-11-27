@@ -173,7 +173,16 @@ public class ObjectDetection {
                 Pair<Mat, Rect> result = new Pair<>(mRgba, previousRoi.clone());
                 return result;
             }
-            Pair<Mat, Rect> result = new Pair<>(mRgba, null);
+            int centerX = mRgba.cols() / 2;
+            int centerY = mRgba.rows() / 2;
+            int rectWidth = 100;
+            int rectHeight = 100;
+
+            int x = centerX - rectWidth / 2;
+            int y = centerY - rectHeight / 2;
+
+            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
+            Pair<Mat, Rect> result = new Pair<>(mRgba, newRect);
             return result;
         }
 
