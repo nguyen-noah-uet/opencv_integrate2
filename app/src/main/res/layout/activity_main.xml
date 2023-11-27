@@ -50,6 +50,40 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/focusDistanceTV" />
 
+    <RadioGroup
+        android:id="@+id/group_radio"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:layout_editor_absoluteY="0dp"
+        tools:ignore="MissingConstraints">
+
+        <RadioButton
+            android:id="@+id/radio_full"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="Full screen"
+            android:checked="true"
+            />
+
+        <RadioButton
+            android:id="@+id/radio_object"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="Object" />
+
+        <RadioButton
+            android:id="@+id/radio_touch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="Touch" />
+    </RadioGroup>
+
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/customAFSwitch"
         android:layout_width="wrap_content"
