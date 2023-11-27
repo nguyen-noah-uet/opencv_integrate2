@@ -1,20 +1,19 @@
 package com.example.opencv_integrate2;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.slider.Slider;
 
@@ -24,15 +23,15 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
-
-import kotlin.Pair;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
@@ -47,7 +46,6 @@ public class MainActivity extends CameraActivity {
     boolean customAF = false;
     CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
     int currentEvaluation = 0;
-    int maxEvaluation = 10;
     float minFocusDistance = 0.0f;
     float maxFocusDistance = 15.0f;
     double goldenRatio = 0.61803398875;
@@ -57,14 +55,16 @@ public class MainActivity extends CameraActivity {
     double f_x2 = 0.0;
     static float x1 = 0.0f;
     static float x2 = 0.0f;
-    boolean flag = false;
-    int skipNum = 5;
-    int skipCounter = 0;
+    int iteration = 0;
+    int maxIteration = 8;
+    double currentSharpness = 0;
+    double sharpnessDiff = 0;
+    private boolean flag = false; // true if f_x1 > f_x2 else false
+    int skipFrameDefault = 5;
+    int skippedFrame = 5;
+    Hashtable<Float, Double> sharpnessTable = new Hashtable<>();
     ObjectDetection ob;
 
-
-    double prevDistance = 0.0;
-    int iteration = 0;
 
     private void bindViews() {
         customCamera = findViewById(R.id.cameraView);
@@ -85,35 +85,29 @@ public class MainActivity extends CameraActivity {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 customCamera.setFocusDistance(slider.getValue());
-                focusDistanceTV.setText(String.format("Focus distance: %.2f", slider.getValue()));
+                focusDistanceTV.setText(String.format(Locale.ENGLISH,"Focus distance: %.2f", slider.getValue()));
             }
         });
         customAFSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             try {
                 customAF = isChecked;
-                if (customAF) {
+                if(customAF){
                     customCamera.setAutoFocus(false);
                     focusDistanceSlider.setEnabled(true);
-                    focusState = CustomCamera.FocusState.NOT_FOCUSED;
-                    currentEvaluation = 0;
+                    iteration = 0;
                     a = minFocusDistance;
                     b = maxFocusDistance;
                     x1 = 0.0f;
                     x2 = 0.0f;
                     f_x1 = 0.0;
                     f_x2 = 0.0;
-                    flag = false;
-                    skipCounter = 0;
-                    iteration = 0;
-
-
-                } else {
+                    sharpnessTable.clear();
+                }else {
                     customCamera.setAutoFocus(true);
                     focusDistanceSlider.setEnabled(false);
                 }
-                focusDistanceTV.setText(String.format("Focus distance: %.2f", customCamera.getFocusDistance()));
             } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
+                Log.e(TAG, Objects.requireNonNull(e.getMessage()));
             }
         });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
@@ -132,48 +126,48 @@ public class MainActivity extends CameraActivity {
                 Mat I = inputFrame.gray();
                 Mat frame = null;
 
-                switch (options){
-                    case "Full":
-
-
-                        break;
-                    case "Object":
-                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
-                        frame = results.component1();
-                        Rect roiRect = results.component2();
-
-                        Mat roi = new Mat(frame, roiRect);
-                        /// xử lý roi ở đây
-                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
-
-
-
-                        break;
-                    case "Touch":
-
-
-                        break;
-                    default:
-                        //
-                        break;
-
-                }
-
-
-
-
-
-
+//                switch (options){
+//                    case "Full":
+//                        break;
+//                    case "Object":
+//                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+//                        frame = results.component1();
+//                        Rect roiRect = results.component2();
+//
+//                        Mat roi = new Mat(frame, roiRect);
+//                        /// xử lý roi ở đây
+//                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+//                        break;
+//                    case "Touch":
+//                        break;
+//                    default:
+//                        //
+//                        break;
+//                }
                 try {
-//                    if (customAF){
-//                        return useCustomAF(rgba, I);
-//                    }
-                    double sharpness = calculateSharpness(I);
-                    runOnUiThread(() -> sharpnessTV.setText(String.format("Sharpness: %.2f", sharpness)));
+//                    prevSharpness = currentSharpness;
+                    currentSharpness = calculateSharpness(I);
+//                    sharpnessDiff = Math.abs(currentSharpness - prevSharpness);
+                    float focusDistance = customCamera.getFocusDistance();
+                    runOnUiThread(()->{
+                        try {
+                            sharpnessTV.setText(String.format(Locale.ENGLISH,"Sharpness: %.2f", currentSharpness));
+                            focusDistanceTV.setText(String.format(Locale.ENGLISH,"Focus distance: %.2f", focusDistance));
+//                            focusDistanceSlider.setValue(focusDistance);
+                        }catch (Exception e){
+                            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+                        }
+                    });
 
+                    if (customAF){
+                        return useCustomAF(rgba, I);
+                    }
+                    else {
+                        return rgba;
+                    }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(TAG, Objects.requireNonNull(e.getMessage()));
                 }
 
                 return rgba;
@@ -183,104 +177,101 @@ public class MainActivity extends CameraActivity {
     }
 
     private Mat useCustomAF(Mat rgba, Mat I) {
-        if (skipCounter <= skipNum) {
-            skipCounter++;
-            return rgba;
-        }
-        if (iteration > 10) {
-            return rgba;
-        }
-        if (iteration <= 10) {
-            Log.i(TAG, String.format("iteration: %d, a: %.2f, b: %.2f, x1: %.2f, x2: %.2f, f_x1: %.2f, f_x2: %.2f", iteration, a, b, x1, x2, f_x1, f_x2));
-        }
-        focusState = CustomCamera.FocusState.FOCUSING;
-        switch (iteration) {
-            case 0:
-                x1 = b - (float) (goldenRatio * (b - a));
-                x2 = a + (float) (goldenRatio * (b - a));
+        try {
+            float focusDistance = customCamera.getFocusDistance();
+            if(skippedFrame > 0){
+                skippedFrame--;
+                return rgba;
+            }
+
+            Log.i(TAG, String.format("iteration: %d", iteration));
+            Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f, sharpnessDiff: %.2f", focusDistance, currentSharpness, sharpnessDiff));
+            sharpnessTable.put(focusDistance, currentSharpness);
+            if(iteration == 0){
+                float d = (float) (goldenRatio * (b - a));
+                x1 = a + d;
+                x2 = b - d; // x1 always > x2
+                // set focus distance
                 customCamera.setFocusDistance(x1);
-                runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
-                skipCounter = 0;
-                iteration++;
-                return rgba;
-            case 1:
-                f_x1 = calculateSharpness(I);
+                Log.i(TAG, "iteration == 0, set distance to x1");
+            }
+            else if (iteration == 1){
+                // here we have sharpness of x1
+                f_x1 = currentSharpness;
+                // set focus distance
                 customCamera.setFocusDistance(x2);
-                runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x2)));
-                skipCounter = 0;
-                iteration++;
-                return rgba;
-            case 2:
-                f_x2 = calculateSharpness(I);
-                if (f_x1 < f_x2) {
+                Log.i(TAG, "iteration == 1, set distance to x2");
+            }
+            else if (iteration == 2){
+                // here we have sharpness of x2
+                f_x2 = currentSharpness;
+                // set focus distance
+                if (f_x1 > f_x2){
+                    // eliminate all x < x2
+                    a = x2;
+                    x2 = x1;
+                    f_x2 = f_x1;
+                    float d = (float) (goldenRatio * (b - a));
+                    x1 = a + d;
+                    // set focus distance
+                    customCamera.setFocusDistance(x1);
+                    Log.i(TAG, "f_x1 > f_x2, set distance to x1");
                     flag = true;
-                    a = x1;
-                    x1 = x2;
-                    x2 = a + (float) (goldenRatio * (b - a));
-                    f_x1 = f_x2;
-                    customCamera.setFocusDistance(x2);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x2)));
                 } else {
+                    // eliminate all x > x1
+                    b = x1;
+                    x1 = x2;
+                    f_x1 = f_x2;
+                    float d = (float) (goldenRatio * (b - a));
+                    x2 = b - d;
+                    // set focus distance
+                    customCamera.setFocusDistance(x2);
+                    Log.i(TAG, "f_x1 < f_x2, set distance to x2");
                     flag = false;
-                    b = x2;
-                    x2 = x1;
-                    x1 = b - (float) (goldenRatio * (b - a));
-                    f_x2 = f_x1;
-                    customCamera.setFocusDistance(x1);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
-                }
-                skipCounter = 0;
-                iteration++;
-                return rgba;
-        }
-        if (iteration > 2 && iteration < 10) {
-            if (flag) {
-                f_x2 = calculateSharpness(I);
-                if (f_x1 < f_x2) {
-                    a = x1;
-                    x1 = x2;
-                    x2 = a + (float) (goldenRatio * (b - a));
-                    f_x1 = f_x2;
-                    customCamera.setFocusDistance(x2);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x2)));
-                } else {
-                    b = x2;
-                    x2 = x1;
-                    x1 = b - (float) (goldenRatio * (b - a));
-                    f_x2 = f_x1;
-                    customCamera.setFocusDistance(x1);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
-                }
-            } else {
-                f_x1 = calculateSharpness(I);
-                if (f_x1 < f_x2) {
-                    a = x1;
-                    x1 = x2;
-                    x2 = a + (float) (goldenRatio * (b - a));
-                    f_x1 = f_x2;
-                    customCamera.setFocusDistance(x2);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x2)));
-                } else {
-                    b = x2;
-                    x2 = x1;
-                    x1 = b - (float) (goldenRatio * (b - a));
-                    f_x2 = f_x1;
-                    customCamera.setFocusDistance(x1);
-                    runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
                 }
             }
-            skipCounter = 0;
+            else if (iteration > 2 && iteration < maxIteration){
+                if(flag){
+                    // means f_x1 > f_x2
+                    f_x1 = currentSharpness;
+                    // eliminate all x < x2
+                    a = x2;
+                    x2 = x1;
+                    f_x2 = f_x1;
+                    x1 = (float) (a + goldenRatio * (b - a));
+                    // set focus distance
+                    customCamera.setFocusDistance(x1);
+                    flag = true;
+                } else {
+                    // means f_x1 < f_x2
+                    f_x2 = currentSharpness;
+                    // eliminate all x > x1
+                    b = x1;
+                    x1 = x2;
+                    f_x1 = f_x2;
+                    x2 = (float) (a + goldenRatio * (b - a));
+                    // set focus distance
+                    customCamera.setFocusDistance(x2);
+                    flag = false;
+                }
+            }
+            if (iteration == maxIteration){
+                for (Float key : sharpnessTable.keySet()) {
+                    Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f", key, sharpnessTable.get(key)));
+                }
+                float maxKey = sharpnessTable.entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue().equals(sharpnessTable.values().stream().max(Double::compare).orElse(null)))
+                        .findFirst()
+                        .map(Map.Entry::getKey)
+                        .orElse(0.0f);
+                customCamera.setFocusDistance(maxKey);
+                customAF = false;
+            }
             iteration++;
-            return rgba;
-
-        }
-
-        if (iteration == 10) {
-            customCamera.setFocusDistance((x1 + x2) / 2);
-            runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", (x1 + x2) / 2)));
-            focusState = CustomCamera.FocusState.FOCUSED;
-            iteration = 11;
-            return rgba;
+            skippedFrame = skipFrameDefault;
+        } catch (Exception e) {
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
         return rgba;
     }
