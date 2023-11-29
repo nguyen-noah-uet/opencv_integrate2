@@ -23,9 +23,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,8 +32,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
 import kotlin.Pair;
+
+
 
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
@@ -48,6 +47,7 @@ public class MainActivity extends CameraActivity {
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     TouchableView touchableView;
+
     boolean customAF = false;
     CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
     int currentEvaluation = 0;
@@ -79,7 +79,6 @@ public class MainActivity extends CameraActivity {
         sharpnessTV = findViewById(R.id.sharpnessTV);
         radioGroup = findViewById(R.id.group_radio);
         touchableView = findViewById(R.id.touchableView);
-
     }
 
     private void wireEvent() {
@@ -121,8 +120,6 @@ public class MainActivity extends CameraActivity {
             Rect previousRoiTouch =  null;
             @Override
             public void onCameraViewStarted(int width, int height) {
-
-
                 touchableView.setVisibility(View.INVISIBLE);
                 radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                     @Override
@@ -149,7 +146,6 @@ public class MainActivity extends CameraActivity {
                     }
                 });
             }
-
 
             @Override
             public void onCameraViewStopped() {
@@ -384,7 +380,6 @@ public class MainActivity extends CameraActivity {
                 return;
             }
             bindViews();
-
             wireEvent();
 
             if (!OpenCVLoader.initDebug()) {
