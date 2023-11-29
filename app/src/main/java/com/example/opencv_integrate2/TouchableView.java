@@ -5,11 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -69,13 +66,13 @@ public class TouchableView extends View {
         return super.onTouchEvent(event);
     }
 
-    public Rect getRoi(Mat rgba) {
+    public Rect getRoi(Mat mat) {
         float alpha = 0.4f;
         int squareSize = 200; // Kích thước vuông
         if (touchX == 0.0 && touchY == 0.0) {
             // Trả về hình vuông ở giữa màn hình
-            int centerX = rgba.width() / 2;
-            int centerY = rgba.height() / 2;
+            int centerX = mat.width() / 2;
+            int centerY = mat.height() / 2;
             return new Rect((int)(centerX - squareSize / 2), (int)(centerY - squareSize / 2), squareSize, squareSize);
         } else {
             int touchXInt = (int) touchX;

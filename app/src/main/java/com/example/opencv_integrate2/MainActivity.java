@@ -13,7 +13,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.material.slider.Slider;
 
@@ -21,19 +20,18 @@ import org.opencv.android.CameraActivity;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-import kotlin.Pair;
 
+import kotlin.Pair;
 
 
 public class MainActivity extends CameraActivity {
@@ -48,26 +46,8 @@ public class MainActivity extends CameraActivity {
     RadioGroup radioGroup;
     TouchableView touchableView;
 
-    boolean customAF = false;
-    CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
-    int currentEvaluation = 0;
-    float minFocusDistance = 0.0f;
-    float maxFocusDistance = 15.0f;
-    double goldenRatio = 0.61803398875;
-    float a = minFocusDistance;
-    float b = maxFocusDistance;
-    double f_x1 = 0.0;
-    double f_x2 = 0.0;
-    static float x1 = 0.0f;
-    static float x2 = 0.0f;
-    int iteration = 0;
-    int maxIteration = 8;
-    double currentSharpness = 0;
-    double sharpnessDiff = 0;
-    private boolean flag = false; // true if f_x1 > f_x2 else false
-    int skipFrameDefault = 5;
-    int skippedFrame = 5;
-    Hashtable<Float, Double> sharpnessTable = new Hashtable<>();
+    boolean useCustomAF = false;
+
     ObjectDetection ob;
 
 
@@ -90,24 +70,17 @@ public class MainActivity extends CameraActivity {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 customCamera.setFocusDistance(slider.getValue());
-                focusDistanceTV.setText(String.format(Locale.ENGLISH,"Focus distance: %.2f", slider.getValue()));
+                focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", slider.getValue()));
             }
         });
         customAFSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             try {
-                customAF = isChecked;
-                if(customAF){
+                useCustomAF = isChecked;
+                if (useCustomAF) {
                     customCamera.setAutoFocus(false);
                     focusDistanceSlider.setEnabled(true);
-                    iteration = 0;
-                    a = minFocusDistance;
-                    b = maxFocusDistance;
-                    x1 = 0.0f;
-                    x2 = 0.0f;
-                    f_x1 = 0.0;
-                    f_x2 = 0.0;
-                    sharpnessTable.clear();
-                }else {
+                    customCamera.resetAutoFocus();
+                } else {
                     customCamera.setAutoFocus(true);
                     focusDistanceSlider.setEnabled(false);
                 }
@@ -117,33 +90,28 @@ public class MainActivity extends CameraActivity {
         });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
             String options = "Full";
-            Rect previousRoiTouch =  null;
+            Rect previousRoiTouch = null;
+
             @Override
             public void onCameraViewStarted(int width, int height) {
                 touchableView.setVisibility(View.INVISIBLE);
-                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                        RadioButton radioButton = findViewById(i);
+                radioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
+                    RadioButton radioButton = findViewById(i);
 
-                        radioButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                if (i == R.id.radio_full) {
-                                    options = "Full";
+                    radioButton.setOnClickListener(view -> {
+                        if (i == R.id.radio_full) {
+                            options = "Full";
 //                                    Log.d("test", "full");
-                                } else if (i == R.id.radio_object) {
-                                    options = "Object";
+                        } else if (i == R.id.radio_object) {
+                            options = "Object";
 //                                    Log.d("test", "obj");
 
-                                } else if (i == R.id.radio_touch) {
-                                    options = "Touch";
+                        } else if (i == R.id.radio_touch) {
+                            options = "Touch";
 //                                    Log.d("test", "touch");
 
-                                }
-                            }
-                        });
-                    }
+                        }
+                    });
                 });
             }
 
@@ -156,87 +124,98 @@ public class MainActivity extends CameraActivity {
 
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
-                Mat frame = null;
-                Mat roi = null;
-                switch (options){
-                    case "Full":
-                        touchableView.setVisibility(View.INVISIBLE);
-                        break;
-                    case "Object":
-                        touchableView.setVisibility(View.INVISIBLE);
-                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
-                        frame = results.component1();
-                        Rect roiRect = results.component2();
+                float currentSharpness = customCamera.getCurrentSharpness();
+                float focusDistance = customCamera.getFocusDistance();
 
-                        roi = new Mat(frame, roiRect);
-                        /// xử lý roi ở đây
-                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
-                        break;
-                    case "Touch":
-                        runOnUiThread(new Runnable() {
+                runOnUiThread(() -> {
+                    try {
+                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
+                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+                    } catch (Exception e) {
+                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+                    }
+                });
 
-                            @Override
-                            public void run() {
+                try {
+                    // rotate 90 degree
+                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+                    Mat frame;
+                    Mat roi = null;
+                    switch (options) {
+                        case "Full":
+                            touchableView.setVisibility(View.INVISIBLE);
+//                            int top = I.width() / 4;
+//                            int left = I.height() / 4;
+//                            int width = I.width() / 2;
+//                            int height = I.height() / 2;
+//                            Rect roiRectFull = new Rect(left, top, width, height);
+//                            roi = new Mat(I, roiRectFull);
+                            int scalePercent = 60;
 
+                            // Calculate the new dimensions
+                            int width = (int) (I.width() * scalePercent / 100.0);
+                            int height = (int) (I.height() * scalePercent / 100.0);
+
+                            // Create a Size object with the new dimensions
+                            Size dim = new Size(width, height);
+
+                            // Resize the image
+                            Mat resized = new Mat();
+                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
+                            roi = resized;
+                            break;
+                        case "Object":
+                            touchableView.setVisibility(View.INVISIBLE);
+                            Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+                            frame = results.component1();
+                            Rect roiRect = results.component2();
+
+                            roi = new Mat(frame, roiRect);
+                            /// xử lý roi ở đây
+                            Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+                            break;
+                        case "Touch":
+                            runOnUiThread(() -> {
                                 // Stuff that updates the UI
                                 touchableView.setVisibility(View.VISIBLE);
 
-                            }
-                        });
+                            });
 //                         dùng điều kiện của accelemeter để gọi roi
-                        Rect roiRectTouch = touchableView.getRoi(rgba);
+                            Rect roiRectTouch = touchableView.getRoi(I);
 
 
 //                        Log.d("TAGGg", String.valueOf(roiRectTouch));
 
-                        if(!rgba.empty()){
-                            if(roiRectTouch != null){
+                            if (roiRectTouch != null) {
 
                                 roiRectTouch.x = Math.max(0, roiRectTouch.x);
-                                roiRectTouch.x = Math.min(rgba.rows() - 40, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(I.rows() - 40, roiRectTouch.x);
 
 //                               Log.d("Test", String.valueOf(rgba.rows()));
 
                                 roiRectTouch.y = Math.max(0, roiRectTouch.y);
-                                roiRectTouch.y = Math.min(rgba.cols() - 360, roiRectTouch.y);
-
+                                roiRectTouch.y = Math.min(I.cols() - 360, roiRectTouch.y);
 
 
 //                               Log.d("Tesg", "tesg");
                                 previousRoiTouch = roiRectTouch;
 
-                                roi = new Mat(rgba, roiRectTouch);
+                                roi = new Mat(I, roiRectTouch);
                                 Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
                             }
-                        }
 
-                        break;
-                    default:
-                        //
-                        break;
-                }
 
-                try {
-//                    prevSharpness = currentSharpness;
-                    currentSharpness = calculateSharpness(I);
-//                    sharpnessDiff = Math.abs(currentSharpness - prevSharpness);
-                    float focusDistance = customCamera.getFocusDistance();
-                    runOnUiThread(()->{
-                        try {
-                            sharpnessTV.setText(String.format(Locale.ENGLISH,"Sharpness: %.2f", currentSharpness));
-                            focusDistanceTV.setText(String.format(Locale.ENGLISH,"Focus distance: %.2f", focusDistance));
-//                            focusDistanceSlider.setValue(focusDistance);
-                        }catch (Exception e){
-                            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-                        }
-                    });
-
-                    if (customAF){
-                        return useCustomAF(rgba, I);
+                            break;
+                        default:
+                            roi = I;
+                            break;
                     }
-                    else {
-                        return rgba;
+
+
+                    if (canPerformAutoFocus()) {
+                        customCamera.performAutoFocus(roi);
                     }
+                    return rgba;
 
                 } catch (Exception e) {
                     Log.e(TAG, Objects.requireNonNull(e.getMessage()));
@@ -248,125 +227,8 @@ public class MainActivity extends CameraActivity {
         });
     }
 
-    private Mat useCustomAF(Mat rgba, Mat I) {
-        try {
-            float focusDistance = customCamera.getFocusDistance();
-            if(skippedFrame > 0){
-                skippedFrame--;
-                return rgba;
-            }
-
-            Log.i(TAG, String.format("iteration: %d", iteration));
-            Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f, sharpnessDiff: %.2f", focusDistance, currentSharpness, sharpnessDiff));
-            sharpnessTable.put(focusDistance, currentSharpness);
-            if(iteration == 0){
-                float d = (float) (goldenRatio * (b - a));
-                x1 = a + d;
-                x2 = b - d; // x1 always > x2
-                // set focus distance
-                customCamera.setFocusDistance(x1);
-                Log.i(TAG, "iteration == 0, set distance to x1");
-            }
-            else if (iteration == 1){
-                // here we have sharpness of x1
-                f_x1 = currentSharpness;
-                // set focus distance
-                customCamera.setFocusDistance(x2);
-                Log.i(TAG, "iteration == 1, set distance to x2");
-            }
-            else if (iteration == 2){
-                // here we have sharpness of x2
-                f_x2 = currentSharpness;
-                // set focus distance
-                if (f_x1 > f_x2){
-                    // eliminate all x < x2
-                    a = x2;
-                    x2 = x1;
-                    f_x2 = f_x1;
-                    float d = (float) (goldenRatio * (b - a));
-                    x1 = a + d;
-                    // set focus distance
-                    customCamera.setFocusDistance(x1);
-                    Log.i(TAG, "f_x1 > f_x2, set distance to x1");
-                    flag = true;
-                } else {
-                    // eliminate all x > x1
-                    b = x1;
-                    x1 = x2;
-                    f_x1 = f_x2;
-                    float d = (float) (goldenRatio * (b - a));
-                    x2 = b - d;
-                    // set focus distance
-                    customCamera.setFocusDistance(x2);
-                    Log.i(TAG, "f_x1 < f_x2, set distance to x2");
-                    flag = false;
-                }
-            }
-            else if (iteration > 2 && iteration < maxIteration){
-                if(flag){
-                    // means f_x1 > f_x2
-                    f_x1 = currentSharpness;
-                    // eliminate all x < x2
-                    a = x2;
-                    x2 = x1;
-                    f_x2 = f_x1;
-                    x1 = (float) (a + goldenRatio * (b - a));
-                    // set focus distance
-                    customCamera.setFocusDistance(x1);
-                    flag = true;
-                } else {
-                    // means f_x1 < f_x2
-                    f_x2 = currentSharpness;
-                    // eliminate all x > x1
-                    b = x1;
-                    x1 = x2;
-                    f_x1 = f_x2;
-                    x2 = (float) (a + goldenRatio * (b - a));
-                    // set focus distance
-                    customCamera.setFocusDistance(x2);
-                    flag = false;
-                }
-            }
-            if (iteration == maxIteration){
-                for (Float key : sharpnessTable.keySet()) {
-                    Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f", key, sharpnessTable.get(key)));
-                }
-                float maxKey = sharpnessTable.entrySet()
-                        .stream()
-                        .filter(entry -> entry.getValue().equals(sharpnessTable.values().stream().max(Double::compare).orElse(null)))
-                        .findFirst()
-                        .map(Map.Entry::getKey)
-                        .orElse(0.0f);
-                customCamera.setFocusDistance(maxKey);
-                customAF = false;
-            }
-            iteration++;
-            skippedFrame = skipFrameDefault;
-        } catch (Exception e) {
-            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-        }
-        return rgba;
-    }
-
-
-    private double calculateSharpness(Mat I) {
-        Mat padded = new Mat();                     //expand input image to optimal size
-        int m = Core.getOptimalDFTSize(I.rows());
-        int n = Core.getOptimalDFTSize(I.cols()); // on the border add zero values
-        Core.copyMakeBorder(I, padded, 0, m - I.rows(), 0, n - I.cols(), Core.BORDER_CONSTANT, Scalar.all(0));
-        List<Mat> planes = new ArrayList<Mat>();
-        padded.convertTo(padded, CvType.CV_32F);
-        planes.add(padded);
-        planes.add(Mat.zeros(padded.size(), CvType.CV_32F));
-        Mat complexI = new Mat();
-        Core.merge(planes, complexI);         // Add to the expanded another plane with zeros
-        Core.dft(complexI, complexI);         // this way the result may fit in the source matrix
-        Core.split(complexI, planes);                               // planes.get(0) = Re(DFT(I), planes.get(1) = Im(DFT(I))
-        Core.magnitude(planes.get(0), planes.get(1), planes.get(0));// planes.get(0) = magnitude
-        Mat magI = planes.get(0);
-        double sharpness = Core.mean(magI).val[0];
-        currentEvaluation++;
-        return sharpness;
+    private boolean canPerformAutoFocus() {
+        return useCustomAF;
     }
 
     @Override
@@ -402,12 +264,6 @@ public class MainActivity extends CameraActivity {
         }
     }
 
-
-    private boolean hasCameraPermission() {
-        return ContextCompat.checkSelfPermission(
-                this, Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED;
-    }
 
     @Override
     protected List<? extends CameraBridgeViewBase> getCameraViewList() {
