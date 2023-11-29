@@ -62,18 +62,18 @@ public class ObjectDetection {
         }
     }
 
-    public double calculateSharpness(Mat gray) {
-
-        // Apply the Laplacian operator to calculate the gradient
-        Mat laplacian = new Mat();
-        Imgproc.Laplacian(gray, laplacian, CvType.CV_64F);
-
-        // Calculate the variance of the Laplacian (a measure of image sharpness)
-        MatOfDouble mean = new MatOfDouble(), sigma = new MatOfDouble();
-        Core.meanStdDev(laplacian, mean, sigma);
-        double sharpness = sigma.get(0, 0)[0] * sigma.get(0, 0)[0];
-        return sharpness;
-    }
+//    public double calculateSharpness(Mat gray) {
+//
+//        // Apply the Laplacian operator to calculate the gradient
+//        Mat laplacian = new Mat();
+//        Imgproc.Laplacian(gray, laplacian, CvType.CV_64F);
+//
+//        // Calculate the variance of the Laplacian (a measure of image sharpness)
+//        MatOfDouble mean = new MatOfDouble(), sigma = new MatOfDouble();
+//        Core.meanStdDev(laplacian, mean, sigma);
+//        double sharpness = sigma.get(0, 0)[0] * sigma.get(0, 0)[0];
+//        return sharpness;
+//    }
 
     public double calculateDistance(double W, double personWidth) {
         return W / personWidth;
@@ -190,7 +190,7 @@ public class ObjectDetection {
         Mat gray = new Mat();
         // sử dụng shaprness là variance of laplacian (high pass filter) -> có thể đổi sang tính sharpness tính bằng độ lớn của các thành phần tần số
         Imgproc.cvtColor(mRgba, gray, Imgproc.COLOR_RGBA2GRAY);
-        double sharpness = calculateSharpness(gray);
+//        double sharpness = calculateSharpness(gray);
 
 //        Imgproc.putText(mRgba, String.format("Sharpness: %.2f", sharpness), new Point(10, 30),
 //                Imgproc.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0, 255, 0), 2);

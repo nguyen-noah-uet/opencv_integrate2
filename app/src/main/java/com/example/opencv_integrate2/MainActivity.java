@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import kotlin.Pair;
+
+
 
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
@@ -43,6 +46,8 @@ public class MainActivity extends CameraActivity {
     TextView sharpnessTV;
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
+    TouchableView touchableView;
+
     boolean customAF = false;
     CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
     int currentEvaluation = 0;
@@ -73,10 +78,10 @@ public class MainActivity extends CameraActivity {
         focusDistanceTV = findViewById(R.id.focusDistanceTV);
         sharpnessTV = findViewById(R.id.sharpnessTV);
         radioGroup = findViewById(R.id.group_radio);
-
+        touchableView = findViewById(R.id.touchableView);
     }
 
-    private void wireEvents(String options) {
+    private void wireEvent() {
         focusDistanceSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {
@@ -111,8 +116,35 @@ public class MainActivity extends CameraActivity {
             }
         });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
+            String options = "Full";
+            Rect previousRoiTouch =  null;
             @Override
             public void onCameraViewStarted(int width, int height) {
+                touchableView.setVisibility(View.INVISIBLE);
+                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                        RadioButton radioButton = findViewById(i);
+
+                        radioButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (i == R.id.radio_full) {
+                                    options = "Full";
+//                                    Log.d("test", "full");
+                                } else if (i == R.id.radio_object) {
+                                    options = "Object";
+//                                    Log.d("test", "obj");
+
+                                } else if (i == R.id.radio_touch) {
+                                    options = "Touch";
+//                                    Log.d("test", "touch");
+
+                                }
+                            }
+                        });
+                    }
+                });
             }
 
             @Override
@@ -125,25 +157,65 @@ public class MainActivity extends CameraActivity {
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
                 Mat frame = null;
+                Mat roi = null;
+                switch (options){
+                    case "Full":
+                        touchableView.setVisibility(View.INVISIBLE);
+                        break;
+                    case "Object":
+                        touchableView.setVisibility(View.INVISIBLE);
+                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+                        frame = results.component1();
+                        Rect roiRect = results.component2();
 
-//                switch (options){
-//                    case "Full":
-//                        break;
-//                    case "Object":
-//                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
-//                        frame = results.component1();
-//                        Rect roiRect = results.component2();
-//
-//                        Mat roi = new Mat(frame, roiRect);
-//                        /// xử lý roi ở đây
-//                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
-//                        break;
-//                    case "Touch":
-//                        break;
-//                    default:
-//                        //
-//                        break;
-//                }
+                        roi = new Mat(frame, roiRect);
+                        /// xử lý roi ở đây
+                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+                        break;
+                    case "Touch":
+                        runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                // Stuff that updates the UI
+                                touchableView.setVisibility(View.VISIBLE);
+
+                            }
+                        });
+//                         dùng điều kiện của accelemeter để gọi roi
+                        Rect roiRectTouch = touchableView.getRoi(rgba);
+
+
+//                        Log.d("TAGGg", String.valueOf(roiRectTouch));
+
+                        if(!rgba.empty()){
+                            if(roiRectTouch != null){
+
+                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(rgba.rows() - 40, roiRectTouch.x);
+
+//                               Log.d("Test", String.valueOf(rgba.rows()));
+
+                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
+                                roiRectTouch.y = Math.min(rgba.cols() - 360, roiRectTouch.y);
+
+
+
+//                               Log.d("Tesg", "tesg");
+                                previousRoiTouch = roiRectTouch;
+
+                                roi = new Mat(rgba, roiRectTouch);
+                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+                            }
+                        }
+
+                        break;
+                    default:
+                        //
+                        break;
+                }
+
                 try {
 //                    prevSharpness = currentSharpness;
                     currentSharpness = calculateSharpness(I);
@@ -308,27 +380,8 @@ public class MainActivity extends CameraActivity {
                 return;
             }
             bindViews();
+            wireEvent();
 
-            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup radioGroup, int i) {
-                    RadioButton radioButton = findViewById(i);
-                    radioButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            if(i == R.id.radio_full){
-                                wireEvents("Full");
-                            }else if(i == R.id.radio_object){
-                                wireEvents("Object");
-                            }else if(i == R.id.radio_touch){
-                                wireEvents("Touch");
-                            }
-                        }
-                    });
-
-
-                }
-            });
             if (!OpenCVLoader.initDebug()) {
                 Log.e("OpenCVhuhuuh", "Unable to load OpenCV!");
             } else {
