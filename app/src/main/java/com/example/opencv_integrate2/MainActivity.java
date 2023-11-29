@@ -6,9 +6,17 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+<<<<<<< refs/remotes/origin/hieu
+=======
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+>>>>>>> local
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +38,8 @@ import java.util.List;
 
 import kotlin.Pair;
 
+import kotlin.Pair;
+
 public class MainActivity extends CameraActivity {
     private static final String TAG = "MyMainActivity";
     CustomCamera customCamera;
@@ -38,6 +48,12 @@ public class MainActivity extends CameraActivity {
     Slider focusDistanceSlider;
     TextView focusDistanceTV;
     TextView sharpnessTV;
+<<<<<<< refs/remotes/origin/hieu
+=======
+    RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
+    RadioGroup radioGroup;
+    TouchableView touchableView;
+>>>>>>> local
     boolean customAF = false;
     CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
     int currentEvaluation = 0;
@@ -65,21 +81,35 @@ public class MainActivity extends CameraActivity {
         focusDistanceSlider = findViewById(R.id.focusDistanceSlider);
         focusDistanceTV = findViewById(R.id.focusDistanceTV);
         sharpnessTV = findViewById(R.id.sharpnessTV);
+<<<<<<< refs/remotes/origin/hieu
     }
     private void wireEvents() {
+=======
+        radioGroup = findViewById(R.id.group_radio);
+        touchableView = findViewById(R.id.touchableView);
+
+
+    }
+
+    private void wireEvents(Context context) {
+>>>>>>> local
         focusDistanceSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {}
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 customCamera.setFocusDistance(slider.getValue());
+<<<<<<< refs/remotes/origin/hieu
                 focusDistanceTV.setText(String.format("Focus distance: %.2f", slider.getValue()));
+=======
+                focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", slider.getValue()));
+>>>>>>> local
             }
         });
         customAFSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             try {
                 customAF = isChecked;
-                if(customAF){
+                if (customAF) {
                     customCamera.setAutoFocus(false);
                     focusDistanceSlider.setEnabled(true);
                     focusState = CustomCamera.FocusState.NOT_FOCUSED;
@@ -90,12 +120,17 @@ public class MainActivity extends CameraActivity {
                     x2 = 0.0f;
                     f_x1 = 0.0;
                     f_x2 = 0.0;
+<<<<<<< refs/remotes/origin/hieu
                     flag = false;
                     skipCounter = 0;
                     iteration = 0;
 
 
                 }else {
+=======
+                    sharpnessTable.clear();
+                } else {
+>>>>>>> local
                     customCamera.setAutoFocus(true);
                     focusDistanceSlider.setEnabled(false);
                 }
@@ -105,14 +140,52 @@ public class MainActivity extends CameraActivity {
             }
         });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
+            String options = "Full";
+            Rect previousRoiTouch =  null;
+
+
             @Override
+<<<<<<< refs/remotes/origin/hieu
             public void onCameraViewStarted(int width, int height) {}
+=======
+            public void onCameraViewStarted(int width, int height) {
+
+
+                touchableView.setVisibility(View.INVISIBLE);
+                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                        RadioButton radioButton = findViewById(i);
+
+                        radioButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (i == R.id.radio_full) {
+                                    options = "Full";
+//                                    Log.d("test", "full");
+                                } else if (i == R.id.radio_object) {
+                                    options = "Object";
+//                                    Log.d("test", "obj");
+
+                                } else if (i == R.id.radio_touch) {
+                                    options = "Touch";
+//                                    Log.d("test", "touch");
+
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+>>>>>>> local
             @Override
             public void onCameraViewStopped() {}
             @Override
             public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
+<<<<<<< refs/remotes/origin/hieu
                
 
                 Pair<Mat, Rect> results = ob.CascadeRec(rgba);
@@ -136,6 +209,91 @@ public class MainActivity extends CameraActivity {
                     double sharpness = calculateSharpness(I);
                     runOnUiThread(() -> sharpnessTV.setText(String.format("Sharpness: %.2f", sharpness)));
 
+=======
+                Mat frame = null;
+                Mat roi = null;
+
+                switch (options) {
+                    case "Full":
+                        touchableView.setVisibility(View.INVISIBLE);
+
+                        break;
+                    case "Object":
+                        touchableView.setVisibility(View.INVISIBLE);
+
+                        Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+                        frame = results.component1();
+                        Rect roiRect = results.component2();
+
+                        roi = new Mat(frame, roiRect);
+                        /// xử lý roi ở đây
+                        Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+                        break;
+                    case "Touch":
+                        runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                // Stuff that updates the UI
+                                touchableView.setVisibility(View.VISIBLE);
+
+                            }
+                        });
+//                         dùng điều kiện của accelemeter để gọi roi
+                        Rect roiRectTouch = touchableView.getRoi(rgba);
+
+
+//                        Log.d("TAGGg", String.valueOf(roiRectTouch));
+
+                       if(!rgba.empty()){
+                           if(roiRectTouch != null){
+
+                               roiRectTouch.x = Math.max(0, roiRectTouch.x);
+                               roiRectTouch.x = Math.min(rgba.rows() - 40, roiRectTouch.x);
+
+//                               Log.d("Test", String.valueOf(rgba.rows()));
+
+                               roiRectTouch.y = Math.max(0, roiRectTouch.y);
+                               roiRectTouch.y = Math.min(rgba.cols() - 360, roiRectTouch.y);
+
+
+
+//                               Log.d("Tesg", "tesg");
+                               previousRoiTouch = roiRectTouch;
+
+                                roi = new Mat(rgba, roiRectTouch);
+                            Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+                           }
+                       }
+
+
+                        break;
+                    default:
+                        //
+                        break;
+                }
+                try {
+//                    prevSharpness = currentSharpness;
+                    currentSharpness = calculateSharpness(I);
+//                    sharpnessDiff = Math.abs(currentSharpness - prevSharpness);
+                    float focusDistance = customCamera.getFocusDistance();
+                    runOnUiThread(() -> {
+                        try {
+                            sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
+                            focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+//                            focusDistanceSlider.setValue(focusDistance);
+                        } catch (Exception e) {
+                            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+                        }
+                    });
+
+                    if (customAF) {
+                        return useCustomAF(rgba, I);
+                    } else {
+                        return rgba;
+                    }
+>>>>>>> local
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -148,6 +306,7 @@ public class MainActivity extends CameraActivity {
     }
 
     private Mat useCustomAF(Mat rgba, Mat I) {
+<<<<<<< refs/remotes/origin/hieu
         if (skipCounter <= skipNum){
             skipCounter++;
             return rgba;
@@ -178,6 +337,45 @@ public class MainActivity extends CameraActivity {
             case 2:
                 f_x2 = calculateSharpness(I);
                 if (f_x1 < f_x2){
+=======
+        try {
+            float focusDistance = customCamera.getFocusDistance();
+            if (skippedFrame > 0) {
+                skippedFrame--;
+                return rgba;
+            }
+
+            Log.i(TAG, String.format("iteration: %d", iteration));
+            Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f, sharpnessDiff: %.2f", focusDistance, currentSharpness, sharpnessDiff));
+            sharpnessTable.put(focusDistance, currentSharpness);
+            if (iteration == 0) {
+                float d = (float) (goldenRatio * (b - a));
+                x1 = a + d;
+                x2 = b - d; // x1 always > x2
+                // set focus distance
+                customCamera.setFocusDistance(x1);
+                Log.i(TAG, "iteration == 0, set distance to x1");
+            } else if (iteration == 1) {
+                // here we have sharpness of x1
+                f_x1 = currentSharpness;
+                // set focus distance
+                customCamera.setFocusDistance(x2);
+                Log.i(TAG, "iteration == 1, set distance to x2");
+            } else if (iteration == 2) {
+                // here we have sharpness of x2
+                f_x2 = currentSharpness;
+                // set focus distance
+                if (f_x1 > f_x2) {
+                    // eliminate all x < x2
+                    a = x2;
+                    x2 = x1;
+                    f_x2 = f_x1;
+                    float d = (float) (goldenRatio * (b - a));
+                    x1 = a + d;
+                    // set focus distance
+                    customCamera.setFocusDistance(x1);
+                    Log.i(TAG, "f_x1 > f_x2, set distance to x1");
+>>>>>>> local
                     flag = true;
                     a = x1;
                     x1 = x2;
@@ -187,7 +385,17 @@ public class MainActivity extends CameraActivity {
                     runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x2)));
                 }else {
                     flag = false;
+<<<<<<< refs/remotes/origin/hieu
                     b = x2;
+=======
+                }
+            } else if (iteration > 2 && iteration < maxIteration) {
+                if (flag) {
+                    // means f_x1 > f_x2
+                    f_x1 = currentSharpness;
+                    // eliminate all x < x2
+                    a = x2;
+>>>>>>> local
                     x2 = x1;
                     x1 = b-(float)(goldenRatio*(b-a));
                     f_x2 = f_x1;
@@ -217,6 +425,7 @@ public class MainActivity extends CameraActivity {
                     runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
                 }
             }
+<<<<<<< refs/remotes/origin/hieu
             else {
                 f_x1 = calculateSharpness(I);
                 if (f_x1 < f_x2){
@@ -233,6 +442,11 @@ public class MainActivity extends CameraActivity {
                     f_x2 = f_x1;
                     customCamera.setFocusDistance(x1);
                     runOnUiThread(() -> focusDistanceTV.setText(String.format("Focus distance: %.2f", x1)));
+=======
+            if (iteration == maxIteration) {
+                for (Float key : sharpnessTable.keySet()) {
+                    Log.i(TAG, String.format("focusDistance: %.2f, sharpness:%.2f", key, sharpnessTable.get(key)));
+>>>>>>> local
                 }
             }
             skipCounter = 0;
@@ -283,7 +497,11 @@ public class MainActivity extends CameraActivity {
                 return;
             }
             bindViews();
+<<<<<<< refs/remotes/origin/hieu
             wireEvents();
+=======
+            wireEvents(this);
+>>>>>>> local
 
             if (!OpenCVLoader.initDebug()) {
                 Log.e("OpenCVhuhuuh", "Unable to load OpenCV!");
