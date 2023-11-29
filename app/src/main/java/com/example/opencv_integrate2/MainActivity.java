@@ -10,13 +10,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-<<<<<<< refs/remotes/origin/hieu
-=======
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
->>>>>>> local
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,12 +44,8 @@ public class MainActivity extends CameraActivity {
     Slider focusDistanceSlider;
     TextView focusDistanceTV;
     TextView sharpnessTV;
-<<<<<<< refs/remotes/origin/hieu
-=======
-    RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     TouchableView touchableView;
->>>>>>> local
     boolean customAF = false;
     CustomCamera.FocusState focusState = CustomCamera.FocusState.NOT_FOCUSED;
     int currentEvaluation = 0;
@@ -81,10 +73,6 @@ public class MainActivity extends CameraActivity {
         focusDistanceSlider = findViewById(R.id.focusDistanceSlider);
         focusDistanceTV = findViewById(R.id.focusDistanceTV);
         sharpnessTV = findViewById(R.id.sharpnessTV);
-<<<<<<< refs/remotes/origin/hieu
-    }
-    private void wireEvents() {
-=======
         radioGroup = findViewById(R.id.group_radio);
         touchableView = findViewById(R.id.touchableView);
 
@@ -497,11 +485,8 @@ public class MainActivity extends CameraActivity {
                 return;
             }
             bindViews();
-<<<<<<< refs/remotes/origin/hieu
             wireEvents();
-=======
-            wireEvents(this);
->>>>>>> local
+
 
             if (!OpenCVLoader.initDebug()) {
                 Log.e("OpenCVhuhuuh", "Unable to load OpenCV!");
