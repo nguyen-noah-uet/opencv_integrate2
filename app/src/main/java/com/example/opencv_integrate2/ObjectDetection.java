@@ -30,9 +30,6 @@ public class ObjectDetection {
     private CascadeClassifier faceCascade;
     private final double W = 16.00;
 
-    private long lastDetectionTime = 0;
-    private final long detectionInterval = 1000; // milliseconds
-
     private Rect previousRoi = null;
 
 
@@ -157,18 +154,17 @@ public class ObjectDetection {
         return closestObject;
     }
 
-    public Pair<Mat, Rect> CascadeRec(Mat mRgba) {
+    public Pair<Mat, Rect> CascadeRec(Mat mRgba, CameraMotionDetecion md) {
 
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastDetectionTime < detectionInterval) {
+        if (md.getIsMotion() == false) {
             if (previousRoi != null) {
                 Pair<Mat, Rect> result = new Pair<>(mRgba, previousRoi.clone());
                 return result;
             }
             int centerX = mRgba.cols() / 2;
             int centerY = mRgba.rows() / 2;
-            int rectWidth = 100;
-            int rectHeight = 100;
+            int rectWidth = 200;
+            int rectHeight = 200;
 
             int x = centerX - rectWidth / 2;
             int y = centerY - rectHeight / 2;
@@ -250,14 +246,13 @@ public class ObjectDetection {
         roiX = Math.max(0, Math.min(roiX, mRgba.cols() - roiWidth));
         roiY = Math.max(0, Math.min(roiY, mRgba.rows() - roiHeight));
 
-            Rect roiRect = new Rect(roiX, roiY, roiWidth, roiHeight);
-
-        lastDetectionTime = currentTime;
+        Rect roiRect = new Rect(roiX, roiY, roiWidth, roiHeight);
 
         Pair<Mat, Rect> result = new Pair<>(mRgba, roiRect);
 
         previousRoi = roiRect.clone();
 
+        md.setIsMotion(false);
         return result;
     }
 
