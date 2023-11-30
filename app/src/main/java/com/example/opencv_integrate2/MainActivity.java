@@ -141,7 +141,7 @@ public class MainActivity extends CameraActivity {
 
                 try {
                     // rotate 90 degree
-//                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                     Mat frame;
                     Mat roi = null;
                     switch (options) {
@@ -153,19 +153,7 @@ public class MainActivity extends CameraActivity {
 //                            int height = I.height() / 2;
 //                            Rect roiRectFull = new Rect(left, top, width, height);
 //                            roi = new Mat(I, roiRectFull);
-                            int scalePercent = 60;
-
-                            // Calculate the new dimensions
-                            int width = (int) (I.width() * scalePercent / 100.0);
-                            int height = (int) (I.height() * scalePercent / 100.0);
-
-                            // Create a Size object with the new dimensions
-                            Size dim = new Size(width, height);
-
-                            // Resize the image
-                            Mat resized = new Mat();
-                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
-                            roi = resized;
+                            roi = Utils.scaleImg(I, 40); // scale 40%
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
@@ -201,8 +189,7 @@ public class MainActivity extends CameraActivity {
 
 
 
-                                Log.d("Width", String.valueOf(roiRectTouch.x));
-                                Log.d("Hêight", String.valueOf(roiRectTouch.y));
+                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
 
 //                               Log.d("Tesg", "tesg");
                                 previousRoiTouch = roiRectTouch;
@@ -210,12 +197,6 @@ public class MainActivity extends CameraActivity {
                                 roi = new Mat(I, roiRectTouch);
                                 Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
                             }
-
-
-
-
-
-
                             break;
                         default:
                             roi = I;
