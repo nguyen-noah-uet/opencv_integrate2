@@ -91,9 +91,12 @@ public class MainActivity extends CameraActivity {
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
             String options = "Full";
             Rect previousRoiTouch = null;
+            int cameraViewWidth, camerViewHeight;
 
             @Override
             public void onCameraViewStarted(int width, int height) {
+                cameraViewWidth = width;
+                camerViewHeight = height;
                 touchableView.setVisibility(View.INVISIBLE);
                 radioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
                     RadioButton radioButton = findViewById(i);
@@ -138,7 +141,7 @@ public class MainActivity extends CameraActivity {
 
                 try {
                     // rotate 90 degree
-                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+//                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                     Mat frame;
                     Mat roi = null;
                     switch (options) {
@@ -180,22 +183,26 @@ public class MainActivity extends CameraActivity {
                                 touchableView.setVisibility(View.VISIBLE);
 
                             });
+                            // width 480, height: 640
 //                         dùng điều kiện của accelemeter để gọi roi
-                            Rect roiRectTouch = touchableView.getRoi(I);
-
-
-//                        Log.d("TAGGg", String.valueOf(roiRectTouch));
-
+                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
+//
+////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
+//
                             if (roiRectTouch != null) {
 
                                 roiRectTouch.x = Math.max(0, roiRectTouch.x);
-                                roiRectTouch.x = Math.min(I.rows() - 40, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(cameraViewWidth - 200, roiRectTouch.x);
 
 //                               Log.d("Test", String.valueOf(rgba.rows()));
 
                                 roiRectTouch.y = Math.max(0, roiRectTouch.y);
-                                roiRectTouch.y = Math.min(I.cols() - 360, roiRectTouch.y);
+                                roiRectTouch.y = Math.min(camerViewHeight - 200, roiRectTouch.y);
 
+
+
+                                Log.d("Width", String.valueOf(roiRectTouch.x));
+                                Log.d("Hêight", String.valueOf(roiRectTouch.y));
 
 //                               Log.d("Tesg", "tesg");
                                 previousRoiTouch = roiRectTouch;
@@ -203,6 +210,10 @@ public class MainActivity extends CameraActivity {
                                 roi = new Mat(I, roiRectTouch);
                                 Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
                             }
+
+
+
+
 
 
                             break;

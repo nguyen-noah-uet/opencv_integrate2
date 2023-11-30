@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -16,6 +17,7 @@ public class TouchableView extends View {
     private Paint paint;
     private float touchX = 0, touchY = 0;
     private boolean isTouched = false;
+    private int touchableWidth, touchableHeight;
 
     public TouchableView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -27,6 +29,8 @@ public class TouchableView extends View {
         paint.setColor(Color.RED);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(5);
+        touchableWidth = this.getWidth();
+        touchableHeight = this.getHeight();
     }
 
     @Override
@@ -52,8 +56,12 @@ public class TouchableView extends View {
                 // Khi người dùng chạm xuống màn hình
                 touchX = event.getX();
                 touchY = event.getY();
-//                Log.d("TocuhX", String.valueOf(touchX));
-//                Log.d("TouchY", String.valueOf(touchY));
+
+                touchableHeight = this.getHeight();
+                touchableWidth = this.getWidth();
+
+                Log.d("TocuhX", String.valueOf(touchX));
+                Log.d("TouchY", String.valueOf(touchY));
                 isTouched = true;
                 invalidate(); // Yêu cầu vẽ lại View
                 return true;
@@ -66,8 +74,7 @@ public class TouchableView extends View {
         return super.onTouchEvent(event);
     }
 
-    public Rect getRoi(Mat mat) {
-        float alpha = 0.4f;
+    public Rect getRoi(Mat mat, int width, int height) {
         int squareSize = 200; // Kích thước vuông
         if (touchX == 0.0 && touchY == 0.0) {
             // Trả về hình vuông ở giữa màn hình
@@ -75,17 +82,19 @@ public class TouchableView extends View {
             int centerY = mat.height() / 2;
             return new Rect((int)(centerX - squareSize / 2), (int)(centerY - squareSize / 2), squareSize, squareSize);
         } else {
-            int touchXInt = (int) touchX;
-            int touchYInt = (int) touchY;
-            int left = touchXInt - squareSize / 2;
-            int top = touchYInt - squareSize / 2 ;
 
-            left -= alpha * touchXInt;
-            top -= alpha * touchYInt;
+//            Log.d("Tagg",String.valueOf(touchableHeight));
+            int touchXInt = (int) ((touchX / touchableWidth) * width);
+            int touchYInt = (int) ((touchY / touchableHeight) * height);
+            int tlx = touchXInt - squareSize / 2;
+            int tly = touchYInt - squareSize / 2 ;
+
+//            Log.d("Width", String.valueOf(tlx));
+//            Log.d("Hêight", String.valueOf(tly));
 
 
 
-            return new Rect(left, top, 200, 200);
+            return new Rect(tlx, tly, squareSize, squareSize);
         }
     }
 }

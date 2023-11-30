@@ -31,7 +31,7 @@ public class ObjectDetection {
     private final double W = 16.00;
 
     private long lastDetectionTime = 0;
-    private final long detectionInterval = 500; // milliseconds
+    private final long detectionInterval = 1000; // milliseconds
 
     private Rect previousRoi = null;
 
@@ -61,34 +61,22 @@ public class ObjectDetection {
             throw new RuntimeException(e);
         }
     }
-
-//    public double calculateSharpness(Mat gray) {
-//
-//        // Apply the Laplacian operator to calculate the gradient
-//        Mat laplacian = new Mat();
-//        Imgproc.Laplacian(gray, laplacian, CvType.CV_64F);
-//
-//        // Calculate the variance of the Laplacian (a measure of image sharpness)
-//        MatOfDouble mean = new MatOfDouble(), sigma = new MatOfDouble();
-//        Core.meanStdDev(laplacian, mean, sigma);
-//        double sharpness = sigma.get(0, 0)[0] * sigma.get(0, 0)[0];
-//        return sharpness;
-//    }
-
     public double calculateDistance(double W, double personWidth) {
         return W / personWidth;
     }
 
 
     // face detection
-    // return closest face
+    // kết quả trả về là một khuôn mặt có theo thứ tự ưu tiên gần camera nhất -> gần trung tâm camera nhất
     public Rect faceDetection(Rect[] facesArray, int centerX, int centerY) {
+        // khi nhận được mảng các khuôn mặt
         double[] distances = new double[facesArray.length];
         int index = 0;
+        // tính khoảng cách từ mặt đến camera, cái này mang tính tương đối ch để so sánh chọn ra cái lớn nhất
         for (Rect face : facesArray) {
             distances[index++] = calculateDistance(W, face.width);
         }
-
+        // tìm ra min Distance
         double minDistance = Double.MAX_VALUE;
         for (double distance : distances) {
             minDistance = Math.min(minDistance, distance);
@@ -101,7 +89,7 @@ public class ObjectDetection {
                 closestIndex = i;
             }
         }
-
+            // nếu có nhiều hơn một khuôn mặt có cùng khoảng cách tới camera
         if (count > 1) {
             // Keep only faces with the closest distance
             Rect[] closestFaces = new Rect[count];
@@ -113,6 +101,8 @@ public class ObjectDetection {
             }
 
             // Sort faces based on distance to the center of the camera
+            // bằng cách tính bình phương khoảng cách euclide cho nó lớn
+            // có một cách khác là đo khoảng cashc từ trung tâm ảnh mặt -> tâm, cũng được
             for (int i = 0; i < closestFaces.length - 1; i++) {
                 for (int j = i + 1; j < closestFaces.length; j++) {
                     double distanceI = Math.pow((closestFaces[i].x + closestFaces[i].width / 2) - centerX, 2)
@@ -139,17 +129,19 @@ public class ObjectDetection {
 
     }
 
-    // return closest object
+    // Trả về vật thể có kích thước lớn nhất -> cho dễ tìm
     public Rect itemDetection(Mat gray, int centerX, int centerY) {
         // tìm vật thể có kích thước lớn nhất
         Mat edges = new Mat();
         Rect closestObject = null;
+        // thực hiện các thao tác xử lý ảnh
         Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 2, 2);
         Imgproc.Canny(gray, edges, 50, 150);
 
         // Find contours in the edges image
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
+
         Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Find the contour with the maximum area (largest object)
@@ -249,7 +241,6 @@ public class ObjectDetection {
             roiX = closestRegion.x - (roiWidth - closestRegion.width) / 2;
             roiY = closestRegion.y - (roiHeight - closestRegion.height) / 2;
 
-
         }else{
             roiX = (mRgba.cols() - roiWidth) / 2;
             roiY = (mRgba.rows() - roiHeight) / 2;
@@ -259,7 +250,7 @@ public class ObjectDetection {
         roiX = Math.max(0, Math.min(roiX, mRgba.cols() - roiWidth));
         roiY = Math.max(0, Math.min(roiY, mRgba.rows() - roiHeight));
 
-        Rect roiRect = new Rect(roiX, roiY, roiWidth, roiHeight);
+            Rect roiRect = new Rect(roiX, roiY, roiWidth, roiHeight);
 
         lastDetectionTime = currentTime;
 
