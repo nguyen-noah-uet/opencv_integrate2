@@ -2,6 +2,7 @@ package com.example.opencv_integrate2;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -49,6 +50,7 @@ public class MainActivity extends CameraActivity {
     boolean useCustomAF = false;
 
     ObjectDetection ob;
+    CameraMotionDetecion md;
 
 
     private void bindViews() {
@@ -90,6 +92,7 @@ public class MainActivity extends CameraActivity {
         });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
             String options = "Full";
+            int boxSize = 200;
             Rect previousRoiTouch = null;
             int cameraViewWidth, camerViewHeight;
 
@@ -157,7 +160,7 @@ public class MainActivity extends CameraActivity {
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Pair<Mat, Rect> results = ob.CascadeRec(rgba);
+                            Pair<Mat, Rect> results = ob.CascadeRec(rgba, md);
                             frame = results.component1();
                             Rect roiRect = results.component2();
 
@@ -180,12 +183,12 @@ public class MainActivity extends CameraActivity {
                             if (roiRectTouch != null) {
 
                                 roiRectTouch.x = Math.max(0, roiRectTouch.x);
-                                roiRectTouch.x = Math.min(cameraViewWidth - 200, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
 
 //                               Log.d("Test", String.valueOf(rgba.rows()));
 
                                 roiRectTouch.y = Math.max(0, roiRectTouch.y);
-                                roiRectTouch.y = Math.min(camerViewHeight - 200, roiRectTouch.y);
+                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
 
 
 
@@ -197,6 +200,7 @@ public class MainActivity extends CameraActivity {
                                 roi = new Mat(I, roiRectTouch);
                                 Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
                             }
+
                             break;
                         default:
                             roi = I;
@@ -228,6 +232,8 @@ public class MainActivity extends CameraActivity {
         super.onCreate(savedInstanceState);
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         ob = new ObjectDetection(getApplicationContext());
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        md = new CameraMotionDetecion(sensorManager);
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
