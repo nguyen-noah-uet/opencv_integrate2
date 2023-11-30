@@ -4,6 +4,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -50,5 +51,22 @@ public class Utils {
         Mat gray = new Mat();
         Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
         return gray;
+    }
+
+
+    public static Mat scaleImg(Mat src, int scalePercent){
+        if (scalePercent < 0)
+            scalePercent = 100;
+
+        if (scalePercent == 100)
+            return src;
+        int width = (int) (src.width() * scalePercent / 100.0);
+        int height = (int) (src.height() * scalePercent / 100.0);
+
+        // Create a Size object with the new dimensions
+        Size dim = new Size(width, height);
+        Mat resized = new Mat();
+        Imgproc.resize(src, resized, dim, 0, 0, Imgproc.INTER_AREA);
+        return resized;
     }
 }
