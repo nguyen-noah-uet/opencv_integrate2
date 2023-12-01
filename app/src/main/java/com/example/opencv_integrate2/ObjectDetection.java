@@ -156,23 +156,23 @@ public class ObjectDetection {
 
     public Pair<Mat, Rect> CascadeRec(Mat mRgba, CameraMotionDetecion md) {
 
-        if (md.getIsMotion() == false) {
-            if (previousRoi != null) {
-                Pair<Mat, Rect> result = new Pair<>(mRgba, previousRoi.clone());
-                return result;
-            }
-            int centerX = mRgba.cols() / 2;
-            int centerY = mRgba.rows() / 2;
-            int rectWidth = 200;
-            int rectHeight = 200;
-
-            int x = centerX - rectWidth / 2;
-            int y = centerY - rectHeight / 2;
-
-            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
-            Pair<Mat, Rect> result = new Pair<>(mRgba, newRect);
-            return result;
-        }
+//        if (md.getIsMotion() == false) {
+//            if (previousRoi != null) {
+//                Pair<Mat, Rect> result = new Pair<>(mRgba, previousRoi.clone());
+//                return result;
+//            }
+//            int centerX = mRgba.cols() / 2;
+//            int centerY = mRgba.rows() / 2;
+//            int rectWidth = 200;
+//            int rectHeight = 200;
+//
+//            int x = centerX - rectWidth / 2;
+//            int y = centerY - rectHeight / 2;
+//
+//            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
+//            Pair<Mat, Rect> result = new Pair<>(mRgba, newRect);
+//            return result;
+//        }
 
         Core.flip(mRgba.t(), mRgba, 1);
         Mat gray = new Mat();

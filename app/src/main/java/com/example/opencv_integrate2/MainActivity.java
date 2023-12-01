@@ -2,6 +2,7 @@ package com.example.opencv_integrate2;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,18 +36,18 @@ import java.util.Objects;
 import kotlin.Pair;
 
 
-public class MainActivity extends CameraActivity {
+public class MainActivity extends CameraActivity{
     private static final String TAG = "MyMainActivity";
     CustomCamera customCamera;
-
     SwitchCompat customAFSwitch;
     Slider focusDistanceSlider;
     TextView focusDistanceTV;
     TextView sharpnessTV;
+    TextView accelerometerTV;
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     TouchableView touchableView;
-
+    CameraMotionDetecion cameraMotionDetecion;
     boolean useCustomAF = false;
 
     ObjectDetection ob;
@@ -61,6 +62,7 @@ public class MainActivity extends CameraActivity {
         sharpnessTV = findViewById(R.id.sharpnessTV);
         radioGroup = findViewById(R.id.group_radio);
         touchableView = findViewById(R.id.touchableView);
+        accelerometerTV = findViewById(R.id.accelerometerTV);
     }
 
     private void wireEvent() {
@@ -140,6 +142,11 @@ public class MainActivity extends CameraActivity {
                     try {
                         sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
                         focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
+                        if (vectorAcc > 0.5){
+                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+                        }
+                        accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
                     } catch (Exception e) {
                         Log.e(TAG, Objects.requireNonNull(e.getMessage()));
                     }
@@ -163,7 +170,7 @@ public class MainActivity extends CameraActivity {
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Pair<Mat, Rect> results = ob.CascadeRec(rgba, md);
+                            Pair<Mat, Rect> results = ob.CascadeRec(rgba, cameraMotionDetecion);
                             frame = results.component1();
                             Rect roiRect = results.component2();
 
@@ -212,7 +219,7 @@ public class MainActivity extends CameraActivity {
 
 
                     if (canPerformAutoFocus()) {
-                        customCamera.performAutoFocus(roi);
+                        customCamera.performAutoFocus(roi, cameraMotionDetecion);
                     }
                     return rgba;
 
@@ -224,6 +231,10 @@ public class MainActivity extends CameraActivity {
 
             }
         });
+
+//        cameraMotionDetecion.onSensorChanged(SensorEvent sensorEvent){
+//
+//        };
     }
 
     private boolean canPerformAutoFocus() {
@@ -236,7 +247,7 @@ public class MainActivity extends CameraActivity {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         ob = new ObjectDetection(getApplicationContext());
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        md = new CameraMotionDetecion(sensorManager);
+        cameraMotionDetecion = new CameraMotionDetecion(sensorManager);
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
