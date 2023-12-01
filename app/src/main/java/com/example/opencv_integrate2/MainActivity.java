@@ -107,13 +107,16 @@ public class MainActivity extends CameraActivity {
                     radioButton.setOnClickListener(view -> {
                         if (i == R.id.radio_full) {
                             options = "Full";
+                            customCamera.setSkipFrameDefault(4);
 //                                    Log.d("test", "full");
                         } else if (i == R.id.radio_object) {
                             options = "Object";
+                            customCamera.setSkipFrameDefault(6);
 //                                    Log.d("test", "obj");
 
                         } else if (i == R.id.radio_touch) {
                             options = "Touch";
+                            customCamera.setSkipFrameDefault(9);
 //                                    Log.d("test", "touch");
 
                         }

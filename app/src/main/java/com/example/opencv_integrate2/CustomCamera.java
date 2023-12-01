@@ -29,12 +29,16 @@ public class CustomCamera extends JavaCamera2View {
     static float x1 = 0.0f;
     static float x2 = 0.0f;
     int iteration = 0;
-    int maxIteration = 5;
+    int maxIteration = 7;
     float currentSharpness = 0;
     double sharpnessDiff = 0;
     private boolean flag = false; // true if f_x1 > f_x2 else false
-    int skipFrameDefault = 4;
-    int skippedFrame = 4;
+    int skipFrameDefault = 5;
+    int skippedFrame = 5;
+
+    public void setSkipFrameDefault(int skipFrameDefault) {
+        this.skipFrameDefault = skipFrameDefault;
+    }
     Hashtable<Float, Float> sharpnessTable = new Hashtable<>();
 
     public FocusState getFocusState() {
@@ -136,7 +140,8 @@ public class CustomCamera extends JavaCamera2View {
                     }
                     else {
 //                        Log.i(TAG, String.format(Locale.ENGLISH, "Add focusDistance: %.2f, sharpness: %.2f", focusDistance, currentSharpness));
-                        sharpnessTable.put(focusDistance, currentSharpness);
+                        if(Math.abs(focusDistance - 10.0f) > 0.01)
+                            sharpnessTable.put(focusDistance, currentSharpness);
                     }
                     if (iteration == 0) {
                         Log.i(TAG, "Start AF");
@@ -200,20 +205,31 @@ public class CustomCamera extends JavaCamera2View {
                         // remove key=10.0
                         sharpnessTable.remove(10.00f);
 
-                        Map.Entry<Float, Float> maxEntry1 = null;
-                        Map.Entry<Float, Float> maxEntry2 = null;
+//                        Map.Entry<Float, Float> maxEntry1 = null;
+//                        Map.Entry<Float, Float> maxEntry2 = null;
+//                        for (Map.Entry<Float, Float> entry : sharpnessTable.entrySet()) {
+//                            if (maxEntry1 == null || entry.getValue().compareTo(maxEntry1.getValue()) > 0) {
+//                                maxEntry2 = maxEntry1;
+//                                maxEntry1 = entry;
+//                            } else if (maxEntry2 == null || entry.getValue().compareTo(maxEntry2.getValue()) > 0) {
+//                                maxEntry2 = entry;
+//                            }
+//                        }
+//                        float finalFocusDistance = (maxEntry1.getKey() + maxEntry2.getKey()) / 2;
+//                        setFocusDistance(finalFocusDistance);
+//                        Log.i(TAG, String.format(Locale.ENGLISH, "Set final focusDistance: %.2f", finalFocusDistance));
 
+                        // find max sharpness
+                        Map.Entry<Float, Float> maxEntry = null;
                         for (Map.Entry<Float, Float> entry : sharpnessTable.entrySet()) {
-                            if (maxEntry1 == null || entry.getValue().compareTo(maxEntry1.getValue()) > 0) {
-                                maxEntry2 = maxEntry1;
-                                maxEntry1 = entry;
-                            } else if (maxEntry2 == null || entry.getValue().compareTo(maxEntry2.getValue()) > 0) {
-                                maxEntry2 = entry;
+                            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+                                maxEntry = entry;
                             }
                         }
-                        float finalFocusDistance = (maxEntry1.getKey() + maxEntry2.getKey()) / 2;
+                        float finalFocusDistance = maxEntry.getKey();
                         setFocusDistance(finalFocusDistance);
                         Log.i(TAG, String.format(Locale.ENGLISH, "Set final focusDistance: %.2f", finalFocusDistance));
+
                         focusState = FocusState.FOCUSED;
                         Log.i(TAG, "Stop AF");
                     }
