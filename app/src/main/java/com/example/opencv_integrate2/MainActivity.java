@@ -130,89 +130,86 @@ public class MainActivity extends CameraActivity {
 
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
-                float currentSharpness = customCamera.getCurrentSharpness();
-                float focusDistance = customCamera.getFocusDistance();
-
-                runOnUiThread(() -> {
-                    try {
-                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
-                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-                    } catch (Exception e) {
-                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-                    }
-                });
+//                float currentSharpness = customCamera.getCurrentSharpness();
+//                float focusDistance = customCamera.getFocusDistance();
+//
+//                runOnUiThread(() -> {
+//                    try {
+//                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
+//                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+//                    } catch (Exception e) {
+//                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+//                    }
+//                });
 
                 try {
                     // rotate 90 degree
-//                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
-                    Mat frame;
+                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                     Mat roi = null;
                     switch (options) {
                         case "Full":
-                            touchableView.setVisibility(View.INVISIBLE);
-//                            int top = I.width() / 4;
-//                            int left = I.height() / 4;
-//                            int width = I.width() / 2;
-//                            int height = I.height() / 2;
-//                            Rect roiRectFull = new Rect(left, top, width, height);
-//                            roi = new Mat(I, roiRectFull);
-                            int scalePercent = 60;
-
-                            // Calculate the new dimensions
-                            int width = (int) (I.width() * scalePercent / 100.0);
-                            int height = (int) (I.height() * scalePercent / 100.0);
-
-                            // Create a Size object with the new dimensions
-                            Size dim = new Size(width, height);
-
-                            // Resize the image
-                            Mat resized = new Mat();
-                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
-                            roi = resized;
+//                            touchableView.setVisibility(View.INVISIBLE);
+////                            int top = I.width() / 4;
+////                            int left = I.height() / 4;
+////                            int width = I.width() / 2;
+////                            int height = I.height() / 2;
+////                            Rect roiRectFull = new Rect(left, top, width, height);
+////                            roi = new Mat(I, roiRectFull);
+//                            int scalePercent = 60;
+//
+//                            // Calculate the new dimensions
+//                            int width = (int) (I.width() * scalePercent / 100.0);
+//                            int height = (int) (I.height() * scalePercent / 100.0);
+//
+//                            // Create a Size object with the new dimensions
+//                            Size dim = new Size(width, height);
+//
+//                            // Resize the image
+//                            Mat resized = new Mat();
+//                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
+//                            roi = resized;
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Pair<Mat, Rect> results = ob.CascadeRec(rgba, md);
-                            frame = results.component1();
-                            Rect roiRect = results.component2();
+                            Rect roiRect = ob.CascadeRec(rgba, md);
 
-                            roi = new Mat(frame, roiRect);
+//                            roi = new Mat(rgba, roiRect);
                             /// xử lý roi ở đây
-                            Imgproc.rectangle(frame, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
+                            Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
                             break;
                         case "Touch":
-                            runOnUiThread(() -> {
-                                // Stuff that updates the UI
-                                touchableView.setVisibility(View.VISIBLE);
-
-                            });
-                            // width 480, height: 640
-//                         dùng điều kiện của accelemeter để gọi roi
-                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
+//                            runOnUiThread(() -> {
+//                                // Stuff that updates the UI
+//                                touchableView.setVisibility(View.VISIBLE);
 //
-////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
+//                            });
+//                            // width 480, height: 640
+////                         dùng điều kiện của accelemeter để gọi roi
+//                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
+////
+//////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
+////
+//                            if (roiRectTouch != null) {
 //
-                            if (roiRectTouch != null) {
-
-                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
-                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
-
-//                               Log.d("Test", String.valueOf(rgba.rows()));
-
-                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
-                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
-
-
-
-                                Log.d("Width", String.valueOf(roiRectTouch.x));
-                                Log.d("Hêight", String.valueOf(roiRectTouch.y));
-
-//                               Log.d("Tesg", "tesg");
-                                previousRoiTouch = roiRectTouch;
-
-                                roi = new Mat(I, roiRectTouch);
-                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
-                            }
+//                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
+//                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
+//
+////                               Log.d("Test", String.valueOf(rgba.rows()));
+//
+//                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
+//                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
+//
+//
+//
+//                                Log.d("Width", String.valueOf(roiRectTouch.x));
+//                                Log.d("Hêight", String.valueOf(roiRectTouch.y));
+//
+////                               Log.d("Tesg", "tesg");
+//                                previousRoiTouch = roiRectTouch;
+//
+//                                roi = new Mat(I, roiRectTouch);
+//                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+//                            }
 
                             break;
                         default:
