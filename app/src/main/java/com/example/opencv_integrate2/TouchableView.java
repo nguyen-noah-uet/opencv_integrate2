@@ -75,7 +75,7 @@ public class TouchableView extends View {
     }
 
     public Rect getRoi(Mat mat, int width, int height) {
-        int squareSize = 200; // Kích thước vuông
+        int squareSize = 350; // Kích thước vuông
         if (touchX == 0.0 && touchY == 0.0) {
             // Trả về hình vuông ở giữa màn hình
             int centerX = mat.width() / 2;
