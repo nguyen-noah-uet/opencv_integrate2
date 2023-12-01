@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -44,6 +45,7 @@ public class MainActivity extends CameraActivity{
     TextView focusDistanceTV;
     TextView sharpnessTV;
     TextView accelerometerTV;
+    Button captureButton;
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     TouchableView touchableView;
@@ -63,6 +65,7 @@ public class MainActivity extends CameraActivity{
         radioGroup = findViewById(R.id.group_radio);
         touchableView = findViewById(R.id.touchableView);
         accelerometerTV = findViewById(R.id.accelerometerTV);
+        captureButton = findViewById(R.id.captureButton);
     }
 
     private void wireEvent() {
