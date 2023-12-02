@@ -3,13 +3,9 @@ package com.example.opencv_integrate2;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfRect;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -24,13 +20,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Pair;
-
 public class ObjectDetection {
-    private CascadeClassifier faceCascade;
-    private final double W = 16.00;
-
-    private Rect previousRoi = null;
+    private static final long DETECTION_INTERVAL = 200;
+    private static final long BACK_THRESHOLD = 2000;
+    private static final long STABLE_THRESHOLD = 10;
+    private final CascadeClassifier faceCascade;
+    private  Rect previousRect = null;
+    private long lastDetectionTime = 0;  // Variable to store the last detection time in milliseconds
 
 
     public ObjectDetection(Context context) {
@@ -58,9 +54,6 @@ public class ObjectDetection {
             throw new RuntimeException(e);
         }
     }
-    public double calculateDistance(double W, double personWidth) {
-        return W / personWidth;
-    }
 
 
     // face detection
@@ -71,28 +64,27 @@ public class ObjectDetection {
         int index = 0;
         // tính khoảng cách từ mặt đến camera, cái này mang tính tương đối ch để so sánh chọn ra cái lớn nhất
         for (Rect face : facesArray) {
-            distances[index++] = calculateDistance(W, face.width);
+            distances[index++] = face.width * face.height; // distance min -> diện tích bounding box tìm được là lớn nhất
         }
-        // tìm ra min Distance
-        double minDistance = Double.MAX_VALUE;
+        double maxDistance = Double.MIN_VALUE;
         for (double distance : distances) {
-            minDistance = Math.min(minDistance, distance);
+            maxDistance = Math.max(maxDistance, distance);
         }
         int count = 0;
         int closestIndex = 0;
         for (int i = 0; i < distances.length; i++) {
-            if (distances[i] == minDistance) {
+            if (distances[i] == maxDistance) {
                 count++;
                 closestIndex = i;
             }
         }
-            // nếu có nhiều hơn một khuôn mặt có cùng khoảng cách tới camera
+        // nếu có nhiều hơn một khuôn mặt có cùng khoảng cách tới camera
         if (count > 1) {
             // Keep only faces with the closest distance
             Rect[] closestFaces = new Rect[count];
             index = 0;
             for (int i = 0; i < distances.length; i++) {
-                if (distances[i] == minDistance) {
+                if (distances[i] == maxDistance) {
                     closestFaces[index++] = facesArray[i];
                 }
             }
@@ -126,68 +118,35 @@ public class ObjectDetection {
 
     }
 
-    // Trả về vật thể có kích thước lớn nhất -> cho dễ tìm
-    public Rect itemDetection(Mat gray, int centerX, int centerY) {
-        // tìm vật thể có kích thước lớn nhất
-        Mat edges = new Mat();
-        Rect closestObject = null;
-        // thực hiện các thao tác xử lý ảnh
-        Imgproc.GaussianBlur(gray, gray, new Size(5, 5), 2, 2);
-        Imgproc.Canny(gray, edges, 50, 150);
 
-        // Find contours in the edges image
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
+    public Rect CascadeRec(Mat mRgba, CameraMotionDetecion md) {
+        long currentTime = System.currentTimeMillis();
 
-        Imgproc.findContours(edges, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // Find the contour with the maximum area (largest object)
-        double maxArea = 0;
-        for (MatOfPoint contour : contours) {
-            double area = Imgproc.contourArea(contour);
-            if (area > maxArea) {
-                maxArea = area;
-                Rect boundingRect = Imgproc.boundingRect(contour);
-                closestObject = boundingRect;
-            }
+        if(previousRect == null && currentTime - lastDetectionTime < DETECTION_INTERVAL) {
+            int centerX = mRgba.cols() / 2;
+            int centerY = mRgba.rows() / 2;
+            int rectWidth = 200;
+            int rectHeight = 200;
+
+            int x = centerX - rectWidth / 2;
+            int y = centerY - rectHeight / 2;
+
+            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
+            return newRect;
+        }else if(previousRect != null && currentTime - lastDetectionTime < BACK_THRESHOLD && md.getIsMotion() == false){
+            return previousRect;
+
+
         }
-        return closestObject;
-    }
-
-    public Pair<Mat, Rect> CascadeRec(Mat mRgba, CameraMotionDetecion md) {
-
-//        if (md.getIsMotion() == false) {
-//            if (previousRoi != null) {
-//                Pair<Mat, Rect> result = new Pair<>(mRgba, previousRoi.clone());
-//                return result;
-//            }
-//            int centerX = mRgba.cols() / 2;
-//            int centerY = mRgba.rows() / 2;
-//            int rectWidth = 200;
-//            int rectHeight = 200;
-//
-//            int x = centerX - rectWidth / 2;
-//            int y = centerY - rectHeight / 2;
-//
-//            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
-//            Pair<Mat, Rect> result = new Pair<>(mRgba, newRect);
-//            return result;
-//        }
-
-        Core.flip(mRgba.t(), mRgba, 1);
         Mat gray = new Mat();
-        // sử dụng shaprness là variance of laplacian (high pass filter) -> có thể đổi sang tính sharpness tính bằng độ lớn của các thành phần tần số
-        Imgproc.cvtColor(mRgba, gray, Imgproc.COLOR_RGBA2GRAY);
-//        double sharpness = calculateSharpness(gray);
 
-//        Imgproc.putText(mRgba, String.format("Sharpness: %.2f", sharpness), new Point(10, 30),
-//                Imgproc.FONT_HERSHEY_SIMPLEX, 1, new Scalar(0, 255, 0), 2);
+        Imgproc.cvtColor(mRgba, gray, Imgproc.COLOR_RGBA2GRAY);
 
         int height = gray.height();
         int width = gray.width();
         int centerX = height / 2;
         int centerY = width / 2;
-
 
 
         int absoluteFaceSize = (int) (height * 0.1);
@@ -197,63 +156,44 @@ public class ObjectDetection {
         if (faceCascade != null) {
             faceCascade.detectMultiScale(gray, faces, 1.1, 2, 2, new Size(absoluteFaceSize, absoluteFaceSize), new Size());
         }
-
-
         Rect[] facesArray = faces.toArray();
+//
+//        for(Rect face : facesArray){
+//            Imgproc.rectangle(mRgba, face.tl(), face.br(), new Scalar(0, 255, 0), 2);
+//
+//        }
 
 
         Rect closestRegion = null;
 
         if (facesArray.length > 0) {
-
-
             closestRegion = faceDetection(facesArray, centerX, centerY);
-
             if (closestRegion != null) {
-//                Imgproc.rectangle(mRgba, closestRegion.tl(), closestRegion.br(), new Scalar(0, 255, 0), 2);
+//                Imgproc.rectangle(mRgba, closestRegion.tl(), closestRegion.br(), new Scalar(0, 0, 255), 2);
+
+                closestRegion.x = Math.max(0, closestRegion.x);
+                closestRegion.x = Math.min(height - closestRegion.width, closestRegion.x);
+
+
+                closestRegion.y = Math.max(0, closestRegion.y);
+                closestRegion.y = Math.min(width - closestRegion.height, closestRegion.y);
+
+
+                previousRect = closestRegion;
+
 
             }
-
-        } else {
-
-
-            closestRegion = itemDetection(gray, centerX, centerY);
-
-            // Draw a rectangle around the closest object
-            if (closestRegion != null) {
-//                Imgproc.rectangle(mRgba, closestRegion.tl(), closestRegion.br(), new Scalar(0, 255, 0, 255), 2);
-            }
         }
-        Core.flip(mRgba.t(), mRgba, 0);
-
-
-        int roiWidth = 200;
-        int roiHeight = 200;
-
-        int roiX, roiY;
-
-
-        if (closestRegion != null) {
-            roiX = closestRegion.x - (roiWidth - closestRegion.width) / 2;
-            roiY = closestRegion.y - (roiHeight - closestRegion.height) / 2;
-
-        }else{
-            roiX = (mRgba.cols() - roiWidth) / 2;
-            roiY = (mRgba.rows() - roiHeight) / 2;
-
-        }
-
-        roiX = Math.max(0, Math.min(roiX, mRgba.cols() - roiWidth));
-        roiY = Math.max(0, Math.min(roiY, mRgba.rows() - roiHeight));
-
-        Rect roiRect = new Rect(roiX, roiY, roiWidth, roiHeight);
-
-        Pair<Mat, Rect> result = new Pair<>(mRgba, roiRect);
-
-        previousRoi = roiRect.clone();
-
+        lastDetectionTime = currentTime;
         md.setIsMotion(false);
-        return result;
+
+        // tìm được thành công vật hoặc người/
+
+        if(Math.abs(previousRect.x - closestRegion.x) < STABLE_THRESHOLD && Math.abs(previousRect.y - closestRegion.y) < STABLE_THRESHOLD){
+            return previousRect;
+        }
+
+        return closestRegion;
     }
 
 }
