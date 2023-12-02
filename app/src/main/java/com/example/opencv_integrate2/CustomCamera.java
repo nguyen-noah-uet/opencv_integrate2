@@ -328,18 +328,18 @@ public class CustomCamera extends JavaCamera2View {
 
                     // Add image to the gallery
                     galleryAddPic(context, file);
+                    return true;
 
                 } else {
                     Log.e(TAG, "Failed to create directory");
                 }
 
-                takeCapture = false;
             } else {
                 Log.e(TAG, "External storage not available");
             }
             takeCapture = false;
         }
-        return takeCapture;
+        return false;
     }
 
     private boolean isExternalStorageWritable() {
