@@ -15,6 +15,7 @@ public class CameraMotionDetecion implements SensorEventListener {
     private Sensor acceleroSensor;
     private boolean isMotion = false;
     private float thresholdAcc = 0.5f;
+    private float thresholdGyro = 1f;
 
     private float currentAcc = 0;
 

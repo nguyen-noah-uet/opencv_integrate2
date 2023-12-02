@@ -139,22 +139,22 @@ public class MainActivity extends CameraActivity{
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
 
-                float currentSharpness = customCamera.getCurrentSharpness();
-                float focusDistance = customCamera.getFocusDistance();
-
-                runOnUiThread(() -> {
-                    try {
-                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
-                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
-                        if (vectorAcc > 0.5){
-                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
-                        }
-                        accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
-                    } catch (Exception e) {
-                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-                    }
-                });
+//                float currentSharpness = customCamera.getCurrentSharpness();
+//                float focusDistance = customCamera.getFocusDistance();
+//
+//                runOnUiThread(() -> {
+//                    try {
+//                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
+//                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+//                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
+//                        if (vectorAcc > 0.5){
+//                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+//                        }
+//                        accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
+//                    } catch (Exception e) {
+//                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+//                    }
+//                });
 
 
                 try {
@@ -186,7 +186,7 @@ public class MainActivity extends CameraActivity{
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Rect roiRect = ob.CascadeRec(rgba, md);
+                            Rect roiRect = ob.CascadeRec(rgba, cameraMotionDetecion);
 
 
 //                            roi = new Mat(rgba, roiRect);
@@ -201,33 +201,33 @@ public class MainActivity extends CameraActivity{
 //                            });
 //                            // width 480, height: 640
 ////                         dùng điều kiện của accelemeter để gọi roi
-//                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
+                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
 ////
 //////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
 ////
 //                            if (roiRectTouch != null) {
 //
 
-                            if (roiRectTouch != null) {
-
-                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
-                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
-
-//                               Log.d("Test", String.valueOf(rgba.rows()));
-
-                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
-                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
-
-
-
-                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
-
-//                               Log.d("Tesg", "tesg");
-                                previousRoiTouch = roiRectTouch;
-
-                                roi = new Mat(I, roiRectTouch);
-                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
-                            }
+//                            if (roiRectTouch != null) {
+//
+//                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
+//                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
+//
+////                               Log.d("Test", String.valueOf(rgba.rows()));
+//
+//                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
+//                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
+//
+//
+//
+//                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
+//
+////                               Log.d("Tesg", "tesg");
+//                                previousRoiTouch = roiRectTouch;
+//
+//                                roi = new Mat(I, roiRectTouch);
+//                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+//                            }
 
                             break;
                         default:

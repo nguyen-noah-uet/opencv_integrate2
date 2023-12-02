@@ -45,7 +45,7 @@ public class TouchableView extends View {
             float right = touchX + squareSize / 2;
             float bottom = touchY + squareSize / 2;
 
-            canvas.drawRect(left, top, right, bottom, paint);
+//            canvas.drawRect(left, top, right, bottom, paint);
         }
     }
 
