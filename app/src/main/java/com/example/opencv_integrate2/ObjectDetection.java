@@ -122,6 +122,7 @@ public class ObjectDetection {
     public Rect CascadeRec(Mat mRgba, CameraMotionDetecion md) {
         long currentTime = System.currentTimeMillis();
 
+
         if(previousRect == null && currentTime - lastDetectionTime < DETECTION_INTERVAL) {
             int centerX = mRgba.cols() / 2;
             int centerY = mRgba.rows() / 2;
@@ -135,6 +136,7 @@ public class ObjectDetection {
             return newRect;
         }else if(previousRect != null && currentTime - lastDetectionTime < BACK_THRESHOLD && md.getIsMotion() == false){
             return previousRect;
+
 
         }
         Mat gray = new Mat();

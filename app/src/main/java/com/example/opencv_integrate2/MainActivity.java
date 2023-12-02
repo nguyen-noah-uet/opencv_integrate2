@@ -2,10 +2,12 @@ package com.example.opencv_integrate2;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -35,18 +37,19 @@ import java.util.Objects;
 import kotlin.Pair;
 
 
-public class MainActivity extends CameraActivity {
+public class MainActivity extends CameraActivity{
     private static final String TAG = "MyMainActivity";
     CustomCamera customCamera;
-
     SwitchCompat customAFSwitch;
     Slider focusDistanceSlider;
     TextView focusDistanceTV;
     TextView sharpnessTV;
+    TextView accelerometerTV;
+    Button captureButton;
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     TouchableView touchableView;
-
+    CameraMotionDetecion cameraMotionDetecion;
     boolean useCustomAF = false;
 
     ObjectDetection ob;
@@ -61,6 +64,8 @@ public class MainActivity extends CameraActivity {
         sharpnessTV = findViewById(R.id.sharpnessTV);
         radioGroup = findViewById(R.id.group_radio);
         touchableView = findViewById(R.id.touchableView);
+        accelerometerTV = findViewById(R.id.accelerometerTV);
+        captureButton = findViewById(R.id.captureButton);
     }
 
     private void wireEvent() {
@@ -107,13 +112,16 @@ public class MainActivity extends CameraActivity {
                     radioButton.setOnClickListener(view -> {
                         if (i == R.id.radio_full) {
                             options = "Full";
+                            customCamera.setSkipFrameDefault(4);
 //                                    Log.d("test", "full");
                         } else if (i == R.id.radio_object) {
                             options = "Object";
+                            customCamera.setSkipFrameDefault(6);
 //                                    Log.d("test", "obj");
 
                         } else if (i == R.id.radio_touch) {
                             options = "Touch";
+                            customCamera.setSkipFrameDefault(9);
 //                                    Log.d("test", "touch");
 
                         }
@@ -130,17 +138,24 @@ public class MainActivity extends CameraActivity {
 
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
-//                float currentSharpness = customCamera.getCurrentSharpness();
-//                float focusDistance = customCamera.getFocusDistance();
-//
-//                runOnUiThread(() -> {
-//                    try {
-//                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
-//                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-//                    } catch (Exception e) {
-//                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-//                    }
-//                });
+
+                float currentSharpness = customCamera.getCurrentSharpness();
+                float focusDistance = customCamera.getFocusDistance();
+
+                runOnUiThread(() -> {
+                    try {
+                        sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
+                        focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
+                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
+                        if (vectorAcc > 0.5){
+                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+                        }
+                        accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
+                    } catch (Exception e) {
+                        Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+                    }
+                });
+
 
                 try {
                     // rotate 90 degree
@@ -173,6 +188,7 @@ public class MainActivity extends CameraActivity {
                             touchableView.setVisibility(View.INVISIBLE);
                             Rect roiRect = ob.CascadeRec(rgba, md);
 
+
 //                            roi = new Mat(rgba, roiRect);
                             /// xử lý roi ở đây
                             Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
@@ -191,25 +207,27 @@ public class MainActivity extends CameraActivity {
 ////
 //                            if (roiRectTouch != null) {
 //
-//                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
-//                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
-//
-////                               Log.d("Test", String.valueOf(rgba.rows()));
-//
-//                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
-//                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
-//
-//
-//
-//                                Log.d("Width", String.valueOf(roiRectTouch.x));
-//                                Log.d("Hêight", String.valueOf(roiRectTouch.y));
-//
-////                               Log.d("Tesg", "tesg");
-//                                previousRoiTouch = roiRectTouch;
-//
-//                                roi = new Mat(I, roiRectTouch);
-//                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
-//                            }
+
+                            if (roiRectTouch != null) {
+
+                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
+
+//                               Log.d("Test", String.valueOf(rgba.rows()));
+
+                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
+                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
+
+
+
+                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
+
+//                               Log.d("Tesg", "tesg");
+                                previousRoiTouch = roiRectTouch;
+
+                                roi = new Mat(I, roiRectTouch);
+                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+                            }
 
                             break;
                         default:
@@ -219,7 +237,7 @@ public class MainActivity extends CameraActivity {
 
 
                     if (canPerformAutoFocus()) {
-                        customCamera.performAutoFocus(roi);
+                        customCamera.performAutoFocus(roi, cameraMotionDetecion);
                     }
                     return rgba;
 
@@ -231,6 +249,10 @@ public class MainActivity extends CameraActivity {
 
             }
         });
+
+//        cameraMotionDetecion.onSensorChanged(SensorEvent sensorEvent){
+//
+//        };
     }
 
     private boolean canPerformAutoFocus() {
@@ -243,7 +265,7 @@ public class MainActivity extends CameraActivity {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         ob = new ObjectDetection(getApplicationContext());
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        md = new CameraMotionDetecion(sensorManager);
+        cameraMotionDetecion = new CameraMotionDetecion(sensorManager);
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {

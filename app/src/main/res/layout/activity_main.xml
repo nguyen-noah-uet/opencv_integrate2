@@ -58,6 +58,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/focusDistanceTV" />
 
+    <TextView
+        android:id="@+id/accelerometerTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Accelerometer: "
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.564"
+        app:layout_constraintStart_toEndOf="@+id/sharpnessTV"
+        app:layout_constraintTop_toTopOf="@+id/cameraView" />
+
     <RadioGroup
         android:id="@+id/group_radio"
         android:layout_width="wrap_content"
@@ -100,5 +111,14 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         android:checked="false"/>
+
+    <Button
+        android:id="@+id/captureButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Capture"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

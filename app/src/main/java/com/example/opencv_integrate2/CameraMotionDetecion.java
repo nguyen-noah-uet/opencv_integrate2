@@ -13,15 +13,13 @@ import android.widget.Toast;
 public class CameraMotionDetecion implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor acceleroSensor;
-    private Sensor gyroscopeSensor;
     private boolean isMotion = false;
-    private float thresholdAcc = 0.25f;
-    private float thresholdGyro = 0.9f;
-    private float[] acceleroValues;
-    private float[] gyroValues;
+    private float thresholdAcc = 0.5f;
 
-    private float previousAccMag;
-    private boolean isStartAcc = true;
+    private float currentAcc = 0;
+
+    private float previousAcc = 0;
+    private float valueAccVector = 0;
 
     public CameraMotionDetecion(SensorManager sensorManager){
 
@@ -29,16 +27,12 @@ public class CameraMotionDetecion implements SensorEventListener {
             acceleroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if(acceleroSensor != null){
                 sensorManager.registerListener( this, acceleroSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                acceleroValues = new float[3];
-            }
-
-            gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            if (gyroscopeSensor != null) {
-                sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL);
-                gyroValues = new float[3];
             }
 
         }
+    }
+    float getValueAccVector(){
+        return valueAccVector;
     }
 
     public boolean getIsMotion(){
@@ -49,53 +43,26 @@ public class CameraMotionDetecion implements SensorEventListener {
     }
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        switch (sensorEvent.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                updateAccelerometerData(sensorEvent.values);
-                if(isStartAcc == true){
-                    previousAccMag = (float) Math.sqrt(sensorEvent.values[0] * sensorEvent.values[0] +
-                            sensorEvent.values[1] * sensorEvent.values[1] + sensorEvent.values[2] * sensorEvent.values[2]);
-                    isStartAcc = false;
-                }
-                break;
-            case Sensor.TYPE_GYROSCOPE:
-                updateGyroscopeData(sensorEvent.values);
-                break;
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            previousAcc = currentAcc;
+            currentAcc = calcAcc(sensorEvent.values);
+            valueAccVector = Math.abs(currentAcc - previousAcc);
         }
 
-        detectCameraMotion();
-
-    }
-
-    public void detectCameraMotion(){
-        float accMag =  (float)Math.sqrt(acceleroValues[0] * acceleroValues[0] +
-                acceleroValues[1] * acceleroValues[1] + acceleroValues[2] + acceleroValues[2]
-        );
-
-        float gyroMag =  (float)Math.sqrt(gyroValues[0] * gyroValues[0] +
-                gyroValues[1] * gyroValues[1] + gyroValues[2] + gyroValues[2]
-        );
-
-
-        if(gyroMag > thresholdGyro || Math.abs(accMag - previousAccMag) >  thresholdAcc){
+        if(valueAccVector >  thresholdAcc){
             isMotion = true;
-            previousAccMag = accMag;
+        } else {
+            isMotion = false;
         }
     }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 
-    private void updateAccelerometerData(float[] values) {
-        acceleroValues[0] = values[0];
-        acceleroValues[1] = values[1];
-        acceleroValues[2] = values[2];
+    public float calcAcc(float[] acc){
+        return (float)Math.sqrt(acc[0] * acc[0] + acc[1] * acc[1] + acc[2] * acc[2]);
     }
 
-    private void updateGyroscopeData(float[] values){
-        gyroValues[0] = values[0];
-        gyroValues[1] = values[1];
-        gyroValues[2] = values[2];
-    }
 }
