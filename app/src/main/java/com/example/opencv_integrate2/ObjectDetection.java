@@ -23,10 +23,11 @@ import java.util.List;
 public class ObjectDetection {
     private static final long DETECTION_INTERVAL = 200;
     private static final long BACK_THRESHOLD = 2000;
-
+    private static final long STABLE_THRESHOLD = 10;
     private final CascadeClassifier faceCascade;
     private  Rect previousRect = null;
     private long lastDetectionTime = 0;  // Variable to store the last detection time in milliseconds
+
 
     public ObjectDetection(Context context) {
         // load the model
@@ -132,7 +133,7 @@ public class ObjectDetection {
 
             Rect newRect = new Rect(x, y, rectWidth, rectHeight);
             return newRect;
-        }else if(previousRect != null && currentTime - lastDetectionTime < BACK_THRESHOLD){
+        }else if(previousRect != null && currentTime - lastDetectionTime < BACK_THRESHOLD && md.getIsMotion() == false){
             return previousRect;
 
         }
@@ -178,12 +179,17 @@ public class ObjectDetection {
 
                 previousRect = closestRegion;
 
+
             }
         }
         lastDetectionTime = currentTime;
+        md.setIsMotion(false);
 
         // tìm được thành công vật hoặc người/
 
+        if(Math.abs(previousRect.x - closestRegion.x) < STABLE_THRESHOLD && Math.abs(previousRect.y - closestRegion.y) < STABLE_THRESHOLD){
+            return previousRect;
+        }
 
         return closestRegion;
     }
