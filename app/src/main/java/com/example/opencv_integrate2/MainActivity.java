@@ -35,7 +35,9 @@ import java.util.Locale;
 import java.util.Objects;
 
 import kotlin.Pair;
-
+import org.opencv.core.CvType;
+import org.opencv.core.Core.MinMaxLocResult;
+import java.util.ArrayList;
 
 public class MainActivity extends CameraActivity{
     private static final String TAG = "MyMainActivity";
@@ -55,7 +57,42 @@ public class MainActivity extends CameraActivity{
     ObjectDetection ob;
     CameraMotionDetecion md;
 
+    public static Mat whitePatchReference(Mat frame) {
+        // Separate color channels
+        List<Mat> channelsList = new ArrayList<>();
+        Core.split(frame, channelsList);
 
+        // Calculate scaling factors for each channel
+        Scalar scalingFactors = calculateScalingFactors(channelsList);
+
+        // Apply white balancing to each channel
+        for (Mat channel : channelsList) {
+            // Scale the channel using the calculated factor
+            Core.multiply(channel, scalingFactors, channel);
+        }
+
+        // Merge the channels back into the RGBA image
+        Mat balancedFrame = new Mat();
+        Core.merge(channelsList, balancedFrame);
+
+        return balancedFrame;
+    }
+
+    private static Scalar calculateScalingFactors(List<Mat> channelsList) {
+        // Initialize scaling factors
+        Scalar scalingFactors = new Scalar(1.0, 1.0, 1.0, 1.0);
+
+        // Find the maximum intensity in each channel
+        for (int i = 0; i < channelsList.size(); i++) {
+            MinMaxLocResult minMaxResult = Core.minMaxLoc(channelsList.get(i));
+            double maxVal = minMaxResult.maxVal;
+
+            // Set the scaling factor for the channel
+            scalingFactors.val[i] = 255.0 / maxVal;
+        }
+
+        return scalingFactors;
+    }
     private void bindViews() {
         customCamera = findViewById(R.id.cameraView);
         customAFSwitch = findViewById(R.id.customAFSwitch);
@@ -123,7 +160,8 @@ public class MainActivity extends CameraActivity{
                             options = "Touch";
                             customCamera.setSkipFrameDefault(9);
 //                                    Log.d("test", "touch");
-
+                        } else if (i == R.id.radio_Whitepatch) {
+                            options = "WhitePathReference";
                         }
                     });
                 });
@@ -157,7 +195,7 @@ public class MainActivity extends CameraActivity{
 
                 try {
                     // rotate 90 degree
-                    Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+                    //Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
                     Mat frame;
                     Mat roi = null;
                     switch (options) {
@@ -213,8 +251,11 @@ public class MainActivity extends CameraActivity{
                                 roi = new Mat(I, roiRectTouch);
                                 Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
                             }
-
-                            break;
+                        case "WhitePatchReference":
+                            if (rgba != null) {
+                                Mat balancedFrame = whitePatchReference(rgba);
+                                return balancedFrame;
+                            }
                         default:
                             roi = I;
                             break;
