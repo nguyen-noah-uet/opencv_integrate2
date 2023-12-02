@@ -1,15 +1,24 @@
 package com.example.opencv_integrate2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.icu.text.SimpleDateFormat;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 
 import org.opencv.android.JavaCamera2View;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Map;
@@ -292,5 +301,56 @@ public class CustomCamera extends JavaCamera2View {
         FOCUSING,
         FOCUSED,
         NOT_FOCUSED
+    }
+
+    public boolean saveImageToGallery(Context context, boolean takeCapture, Mat rgba) {
+        if(takeCapture) {
+            if (isExternalStorageWritable()) {
+                Mat save_mat = new Mat();
+                Core.flip(rgba.t(), save_mat, 0);
+                Core.rotate(save_mat, save_mat, Core.ROTATE_90_CLOCKWISE);
+                // Convert image RGBA to BGRA
+                Imgproc.cvtColor(save_mat, save_mat, Imgproc.COLOR_RGBA2BGRA);
+
+                // Save Image to gallery
+                File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "YourAppFolder");
+                boolean success = true;
+                if (!folder.exists()) {
+                    success = folder.mkdirs();
+                }
+
+                if (success) {
+                    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                    String fileName = "IMG_" + timeStamp + ".jpg";
+                    File file = new File(folder, fileName);
+
+                    Imgcodecs.imwrite(file.getAbsolutePath(), save_mat);
+
+                    // Add image to the gallery
+                    galleryAddPic(context, file);
+
+                } else {
+                    Log.e(TAG, "Failed to create directory");
+                }
+
+                takeCapture = false;
+            } else {
+                Log.e(TAG, "External storage not available");
+            }
+            takeCapture = false;
+        }
+        return takeCapture;
+    }
+
+    private boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+    private void galleryAddPic(Context context, File file) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri contentUri = Uri.fromFile(file);
+        mediaScanIntent.setData(contentUri);
+        context.sendBroadcast(mediaScanIntent);
     }
 }
