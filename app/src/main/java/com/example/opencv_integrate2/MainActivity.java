@@ -1,8 +1,7 @@
 package com.example.opencv_integrate2;
 
-import android.Manifest;
+import android.Manifest;;
 import android.content.pm.PackageManager;
-import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,7 +25,6 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -53,6 +51,7 @@ public class MainActivity extends CameraActivity{
     TouchableView touchableView;
     CameraMotionDetecion cameraMotionDetecion;
     boolean useCustomAF = false;
+    boolean takeCapture = false;
 
     ObjectDetection ob;
     CameraMotionDetecion md;
@@ -222,7 +221,6 @@ public class MainActivity extends CameraActivity{
 
                 float currentSharpness = customCamera.getCurrentSharpness();
                 float focusDistance = customCamera.getFocusDistance();
-
                 runOnUiThread(() -> {
                     try {
                         sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
@@ -328,6 +326,10 @@ public class MainActivity extends CameraActivity{
                     if (canPerformAutoFocus()) {
                         customCamera.performAutoFocus(roi, cameraMotionDetecion);
                     }
+
+                    // take_capute image
+                    takeCapture = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
+
                     return rgba;
 
                 } catch (Exception e) {
@@ -339,9 +341,19 @@ public class MainActivity extends CameraActivity{
             }
         });
 
-//        cameraMotionDetecion.onSensorChanged(SensorEvent sensorEvent){
-//
-//        };
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (takeCapture == false){
+                    Log.i(TAG, String.format("True Capture"));
+                    takeCapture = true;
+                } else {
+                    Log.i(TAG, String.format("False Capture"));
+                    takeCapture = false;
+                }
+            }
+        });
+
     }
 
     private boolean canPerformAutoFocus() {
