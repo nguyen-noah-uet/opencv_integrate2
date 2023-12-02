@@ -244,50 +244,44 @@ public class MainActivity extends CameraActivity{
                     Mat roi = null;
                     switch (options) {
                         case "Full":
-//                            touchableView.setVisibility(View.INVISIBLE);
-////                            int top = I.width() / 4;
-////                            int left = I.height() / 4;
-////                            int width = I.width() / 2;
-////                            int height = I.height() / 2;
-////                            Rect roiRectFull = new Rect(left, top, width, height);
-////                            roi = new Mat(I, roiRectFull);
-//                            int scalePercent = 60;
-//
-//                            // Calculate the new dimensions
-//                            int width = (int) (I.width() * scalePercent / 100.0);
-//                            int height = (int) (I.height() * scalePercent / 100.0);
-//
-//                            // Create a Size object with the new dimensions
-//                            Size dim = new Size(width, height);
-//
-//                            // Resize the image
-//                            Mat resized = new Mat();
-//                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
-//                            roi = resized;
+                            touchableView.setVisibility(View.INVISIBLE);
+//                            int top = I.width() / 4;
+//                            int left = I.height() / 4;
+//                            int width = I.width() / 2;
+//                            int height = I.height() / 2;
+//                            Rect roiRectFull = new Rect(left, top, width, height);
+//                            roi = new Mat(I, roiRectFull);
+                            int scalePercent = 40;
+
+                            // Calculate the new dimensions
+                            int width = (int) (I.width() * scalePercent / 100.0);
+                            int height = (int) (I.height() * scalePercent / 100.0);
+
+                            // Create a Size object with the new dimensions
+                            Size dim = new Size(width, height);
+
+                            // Resize the image
+                            Mat resized = new Mat();
+                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
+                            roi = resized;
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
                             Rect roiRect = ob.CascadeRec(rgba, md);
-
 
 //                            roi = new Mat(rgba, roiRect);
                             /// xử lý roi ở đây
                             Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
                             break;
                         case "Touch":
-//                            runOnUiThread(() -> {
-//                                // Stuff that updates the UI
-//                                touchableView.setVisibility(View.VISIBLE);
-//
-//                            });
-//                            // width 480, height: 640
-////                         dùng điều kiện của accelemeter để gọi roi
-//                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
-////
-//////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
-////
-//                            if (roiRectTouch != null) {
-//
+                            runOnUiThread(() -> {
+                                // Stuff that updates the UI
+                                touchableView.setVisibility(View.VISIBLE);
+
+                            });
+                            // width 480, height: 640
+//                         dùng điều kiện của accelemeter để gọi roi
+                            Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
 
                             if (roiRectTouch != null) {
 
@@ -303,7 +297,6 @@ public class MainActivity extends CameraActivity{
 
                                 Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
 
-//                               Log.d("Tesg", "tesg");
                                 previousRoiTouch = roiRectTouch;
 
                                 roi = new Mat(I, roiRectTouch);
@@ -371,9 +364,9 @@ public class MainActivity extends CameraActivity{
             wireEvent();
 
             if (!OpenCVLoader.initDebug()) {
-                Log.e("OpenCVhuhuuh", "Unable to load OpenCV!");
+                Log.e(TAG, "Unable to load OpenCV!");
             } else {
-                Log.d("OpenCVhuhuuh", "OpenCV loaded Successfully!");
+                Log.d(TAG, "OpenCV loaded Successfully!");
                 try {
                     customCamera.enableView();
                     // set back camera
