@@ -1,6 +1,6 @@
 package com.example.opencv_integrate2;
 
-import android.Manifest;;
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -294,8 +294,7 @@ public class MainActivity extends CameraActivity{
 
 
 
-                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
-
+//                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
                                 previousRoiTouch = roiRectTouch;
 
                                 roi = new Mat(I, roiRectTouch);
@@ -311,16 +310,13 @@ public class MainActivity extends CameraActivity{
                     switch (wb_options) {
                         case "WB Off":
                             break;
-                        case "Gray World":
-                            if (rgba != null) {
-                                Mat balancedFrame = applyGrayWorld(rgba);
-                                return balancedFrame;
-                            }
+                        case "Gray World": {
+                            Mat balancedFrame = applyGrayWorld(rgba);
+                            return balancedFrame;
+                        }
                         case "White Path":
-                            if (rgba != null) {
-                                Mat balancedFrame = whitePatchReference(rgba);
-                                return balancedFrame;
-                            }
+                            Mat balancedFrame = whitePatchReference(rgba);
+                            return balancedFrame;
                     }
 
 
@@ -329,8 +325,11 @@ public class MainActivity extends CameraActivity{
                     }
 
                     // take_capute image
-                    takeCapture = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
-
+                    boolean captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
+                    if (captured){
+                        takeCapture = false;
+                        Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                    }
                     return rgba;
 
                 } catch (Exception e) {
@@ -342,16 +341,13 @@ public class MainActivity extends CameraActivity{
             }
         });
 
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (takeCapture == false){
-                    Log.i(TAG, String.format("True Capture"));
-                    takeCapture = true;
-                } else {
-                    Log.i(TAG, String.format("False Capture"));
-                    takeCapture = false;
-                }
+        captureButton.setOnClickListener(v -> {
+            if (!takeCapture){
+                Log.i(TAG, "True Capture");
+                takeCapture = true;
+            } else {
+                Log.i(TAG, "False Capture");
+                takeCapture = false;
             }
         });
 
