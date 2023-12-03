@@ -46,7 +46,6 @@ public class MainActivity extends CameraActivity{
     TextView sharpnessTV;
     TextView accelerometerTV;
     Button captureButton;
-    RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     RadioGroup radioGroup2;
     TouchableView touchableView;
@@ -55,68 +54,11 @@ public class MainActivity extends CameraActivity{
     boolean takeCapture = false;
 
     ObjectDetection ob;
-    CameraMotionDetecion md;
 
-    public static Mat whitePatchReference(Mat frame) {
-        // Separate color channels
-        List<Mat> channelsList = new ArrayList<>();
-        Core.split(frame, channelsList);
+    FrameDifference frameDifference;
 
-        // Calculate scaling factors for each channel
-        Scalar scalingFactors = calculateScalingFactors(channelsList);
+    WhiteBlance whiteBlance;
 
-        // Apply white balancing to each channel
-        for (Mat channel : channelsList) {
-            // Scale the channel using the calculated factor
-            Core.multiply(channel, scalingFactors, channel);
-        }
-
-        // Merge the channels back into the RGBA image
-        Mat balancedFrame = new Mat();
-        Core.merge(channelsList, balancedFrame);
-
-        return balancedFrame;
-    }
-
-    private static Scalar calculateScalingFactors(List<Mat> channelsList) {
-        // Initialize scaling factors
-        Scalar scalingFactors = new Scalar(1.0, 1.0, 1.0, 1.0);
-
-        // Find the maximum intensity in each channel
-        for (int i = 0; i < channelsList.size(); i++) {
-            Core.MinMaxLocResult minMaxResult = Core.minMaxLoc(channelsList.get(i));
-            double maxVal = minMaxResult.maxVal;
-
-            // Set the scaling factor for the channel
-            scalingFactors.val[i] = 255.0 / maxVal;
-        }
-
-        return scalingFactors;
-    }
-
-    public static Mat applyGrayWorld(Mat rgbaFrame) {
-        // Chuyển đổi hình ảnh RGBA sang BGR để sử dụng OpenCV
-        Mat bgrFrame = new Mat();
-        Imgproc.cvtColor(rgbaFrame, bgrFrame, Imgproc.COLOR_RGBA2BGR);
-
-        // Tính toán giá trị trung bình của mỗi kênh màu
-        Scalar mean = Core.mean(bgrFrame);
-
-        // Tính giá trị trung bình của mức độ xám
-        double meanGray = (mean.val[0] + mean.val[1] + mean.val[2]) / 3;
-
-        // Tính tỉ lệ cần thay đổi cho mỗi kênh màu
-        Scalar scale = new Scalar(meanGray / mean.val[0], meanGray / mean.val[1], meanGray / mean.val[2]);
-
-        // Áp dụng tỉ lệ cho từng pixel trong hình ảnh
-        Core.multiply(bgrFrame, scale, bgrFrame);
-
-        // Chuyển đổi trở lại thành hình ảnh RGBA
-        Mat rgbaResult = new Mat();
-        Imgproc.cvtColor(bgrFrame, rgbaResult, Imgproc.COLOR_BGR2RGBA);
-
-        return rgbaResult;
-    }
 
     private void bindViews() {
         customCamera = findViewById(R.id.cameraView);
@@ -197,14 +139,14 @@ public class MainActivity extends CameraActivity{
                     radioButton.setOnClickListener(view -> {
                         if (i == R.id.wb_off) {
                             wb_options = "WB Off";
-//                                    Log.d("test", "full");
+//                                    Log.d("test", "WB Off");
                         } else if (i == R.id.gray_world) {
                             wb_options = "Gray World";
-//                                    Log.d("test", "obj");
+//                                    Log.d("test", "Gray World");
 
                         } else if (i == R.id.white_path) {
                             wb_options = "White Path";
-//                                    Log.d("test", "touch");
+//                                    Log.d("test", "White Path");
                         }
                     });
                 });
@@ -219,6 +161,8 @@ public class MainActivity extends CameraActivity{
 
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
+
+                frameDifference.checkFrameDifference(I);
 
                 float currentSharpness = customCamera.getCurrentSharpness();
                 float focusDistance = customCamera.getFocusDistance();
@@ -266,9 +210,9 @@ public class MainActivity extends CameraActivity{
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Rect roiRect = ob.CascadeRec(rgba, md);
+                            Rect roiRect = ob.CascadeRec(rgba, cameraMotionDetecion);
 
-//                            roi = new Mat(rgba, roiRect);
+                            roi = new Mat(I, roiRect);
                             /// xử lý roi ở đây
                             Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
                             break;
@@ -313,19 +257,19 @@ public class MainActivity extends CameraActivity{
                             break;
                         case "Gray World":
                             if (rgba != null) {
-                                Mat balancedFrame = applyGrayWorld(rgba);
+                                Mat balancedFrame = whiteBlance.applyGrayWorld(rgba);
                                 return balancedFrame;
                             }
                         case "White Path":
                             if (rgba != null) {
-                                Mat balancedFrame = whitePatchReference(rgba);
+                                Mat balancedFrame = whiteBlance.whitePatchReference(rgba);
                                 return balancedFrame;
                             }
                     }
 
 
                     if (canPerformAutoFocus()) {
-                        customCamera.performAutoFocus(roi, cameraMotionDetecion);
+                        customCamera.performAutoFocus(roi, cameraMotionDetecion, frameDifference);
                     }
 
                     // take_capute image
@@ -368,6 +312,8 @@ public class MainActivity extends CameraActivity{
         ob = new ObjectDetection(getApplicationContext());
         SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         cameraMotionDetecion = new CameraMotionDetecion(sensorManager);
+//        is_init = false;
+        frameDifference = new FrameDifference();
         try {
             setContentView(R.layout.activity_main);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {

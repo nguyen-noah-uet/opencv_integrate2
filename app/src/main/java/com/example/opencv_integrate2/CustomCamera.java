@@ -126,7 +126,7 @@ public class CustomCamera extends JavaCamera2View {
      *
      * @param roi The region of interest to perform the auto focus operation on.
      */
-    public void performAutoFocus(Mat roi, CameraMotionDetecion cameraMotionDetecion) {
+    public void performAutoFocus(Mat roi, CameraMotionDetecion cameraMotionDetecion, FrameDifference frameDifference) {
         if (roi == null) {
             Log.i(TAG, "roi is null");
             return;
@@ -249,8 +249,9 @@ public class CustomCamera extends JavaCamera2View {
                 }
                 return;
             case FOCUSED:
-                if(cameraMotionDetecion.getIsMotion() == true){
+                if(cameraMotionDetecion.getIsMotion() ||frameDifference.getIsMotionFrame()){
                     resetAutoFocus();
+                    frameDifference.resetFrameDetection();
                 }
                 return;
             case NOT_FOCUSED:
