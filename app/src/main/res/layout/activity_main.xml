@@ -9,9 +9,7 @@
     <com.example.opencv_integrate2.CustomCamera
         android:id="@+id/cameraView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="-202dp"
-        tools:layout_editor_absoluteY="-16dp">
+        android:layout_height="match_parent">
 
     </com.example.opencv_integrate2.CustomCamera>
     <com.example.opencv_integrate2.TouchableView
@@ -30,7 +28,7 @@
         android:layout_marginStart="4dp"
         android:rotation="270"
         android:stepSize="0.05"
-        android:value="2.4"
+        android:value="10.00"
         android:valueFrom="0.0"
         android:valueTo="15.0"
         app:layout_constraintBottom_toBottomOf="@+id/cameraView"
@@ -114,11 +112,51 @@
 
     <Button
         android:id="@+id/captureButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Capture"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:background="@drawable/baseline_camera_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <RadioGroup
+        android:id="@+id/wb_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="92dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioButton
+            android:id="@+id/wb_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="WB Off" />
+
+        <RadioButton
+            android:id="@+id/gray_world"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Gray World" />
+
+        <RadioButton
+            android:id="@+id/white_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="White Path" />
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/refreshAFButton"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="40dp"
+        android:background="@drawable/baseline_refresh_24"
+        app:layout_constraintBottom_toBottomOf="@+id/customAFSwitch"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

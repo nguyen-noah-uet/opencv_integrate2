@@ -75,9 +75,10 @@ public class TouchableView extends View {
     }
 
     public Rect getRoi(Mat mat, int width, int height) {
+
         int squareSize = 200; // Kích thước vuông
+
         if (touchX == 0.0 && touchY == 0.0) {
-            // Trả về hình vuông ở giữa màn hình
             int centerX = mat.width() / 2;
             int centerY = mat.height() / 2;
             return new Rect((int)(centerX - squareSize / 2), (int)(centerY - squareSize / 2), squareSize, squareSize);
@@ -86,7 +87,6 @@ public class TouchableView extends View {
                 int touchYInt = (int) ((touchY / touchableHeight) * height);
                 int tlx = touchXInt - squareSize / 2;
                 int tly = touchYInt - squareSize / 2 ;
-
 //            Log.d("Width", String.valueOf(touchableWidth));
 //            Log.d("Hêight", String.valueOf(touchableHeight));
 
