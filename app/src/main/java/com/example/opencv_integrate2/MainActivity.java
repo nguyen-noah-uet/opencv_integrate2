@@ -1,5 +1,9 @@
 package com.example.opencv_integrate2;
 
+import static com.example.opencv_integrate2.WhiteBlance.adjustWhiteBalance;
+import static com.example.opencv_integrate2.WhiteBlance.applyGrayWorld;
+import static com.example.opencv_integrate2.WhiteBlance.whitePatchReference;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
@@ -150,14 +154,23 @@ public class MainActivity extends CameraActivity{
                     radioButton.setOnClickListener(view -> {
                         if (i == R.id.wb_off) {
                             wb_options = "WB Off";
-//                                    Log.d("test", "WB Off");
+//                                    Log.d("test", "full");
                         } else if (i == R.id.gray_world) {
                             wb_options = "Gray World";
-//                                    Log.d("test", "Gray World");
+//                                    Log.d("test", "obj");
 
                         } else if (i == R.id.white_path) {
                             wb_options = "White Path";
-//                                    Log.d("test", "White Path");
+//                                    Log.d("test", "touch");
+                        } else if (i == R.id.day_light) {
+                            wb_options = "Daylight";
+//                                    Log.d("test", "obj");
+                        } else if (i == R.id.shade) {
+                            wb_options = "Shade";
+//                                    Log.d("test", "obj");
+                        } else if (i == R.id.tungsten) {
+                            wb_options = "Tungsten";
+//                                    Log.d("test", "obj");
                         }
                     });
                 });
@@ -260,11 +273,62 @@ public class MainActivity extends CameraActivity{
 
                     switch (wb_options) {
                         case "WB Off":
-                            break;
+                            boolean captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
+                            if (captured){
+                                takeCapture = false;
+                                Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                            }
+                            return rgba;
                         case "Gray World":
-                            rgba = WhiteBlance.applyGrayWorld(rgba);
+                            if (rgba != null) {
+                                Mat balancedFrame = applyGrayWorld(rgba);
+                                captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, balancedFrame);
+                                if (captured){
+                                    takeCapture = false;
+                                    Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                                }
+                                return balancedFrame;
+                            }
                         case "White Path":
-                            rgba = WhiteBlance.whitePatchReference(rgba);
+                            if (rgba != null) {
+                                Mat balancedFrame = whitePatchReference(rgba);
+                                captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, balancedFrame);
+                                if (captured){
+                                    takeCapture = false;
+                                    Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                                }
+                                return balancedFrame;
+                            }
+                        case "Daylight":
+                            if (rgba != null) {
+                                Mat balancedFrame = adjustWhiteBalance(rgba, 5500);
+                                captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, balancedFrame);
+                                if (captured){
+                                    takeCapture = false;
+                                    Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                                }
+                                return balancedFrame;
+                            }
+                        case "Shade":
+                            if (rgba != null) {
+                                Mat balancedFrame = adjustWhiteBalance(rgba, 9000);
+                                captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, balancedFrame);
+                                if (captured){
+                                    takeCapture = false;
+                                    Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                                }
+                                return balancedFrame;
+                            }
+                        case "Tungsten":
+                            if (rgba != null) {
+                                Mat balancedFrame = adjustWhiteBalance(rgba, 3200);
+                                captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, balancedFrame);
+                                if (captured){
+                                    takeCapture = false;
+                                    Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                                }
+                                return balancedFrame;
+                            }
                     }
                     // take_capute image
                     boolean captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);

@@ -1,5 +1,7 @@
 package com.example.opencv_integrate2;
 
+import static org.opencv.imgproc.Imgproc.cvtColor;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -66,6 +68,30 @@ public class WhiteBlance {
         // Chuyển đổi trở lại thành hình ảnh RGBA
         Mat rgbaResult = new Mat();
         Imgproc.cvtColor(bgrFrame, rgbaResult, Imgproc.COLOR_BGR2RGBA);
+
+        return rgbaResult;
+    }
+
+    public static Mat adjustWhiteBalance(Mat rgbaFrame, int tempK) {
+        Mat bgrFrame = new Mat();
+        cvtColor(rgbaFrame, bgrFrame, Imgproc.COLOR_RGBA2BGR);
+
+        Scalar maxWhiteBalance = null;
+        if (tempK == 5500) {
+            maxWhiteBalance = new Scalar(255, 236, 224);
+        } else if (tempK == 3200) {
+            maxWhiteBalance = new Scalar(255, 187, 120);
+        } else if (tempK == 9000) {
+            maxWhiteBalance = new Scalar(214, 225, 255);
+        }
+        Scalar scale = new Scalar(
+                maxWhiteBalance.val[0]/255,
+                maxWhiteBalance.val[1]/255,
+                maxWhiteBalance.val[2]/255
+        );
+        Core.multiply(bgrFrame, scale, bgrFrame);
+        Mat rgbaResult = new Mat();
+        cvtColor(bgrFrame, rgbaResult, Imgproc.COLOR_BGR2RGBA);
 
         return rgbaResult;
     }
