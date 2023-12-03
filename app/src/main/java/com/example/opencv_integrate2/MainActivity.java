@@ -252,26 +252,20 @@ public class MainActivity extends CameraActivity{
                             break;
                     }
 
-                    switch (wb_options) {
-                        case "WB Off":
-                            break;
-                        case "Gray World":
-                            if (rgba != null) {
-                                Mat balancedFrame = whiteBlance.applyGrayWorld(rgba);
-                                return balancedFrame;
-                            }
-                        case "White Path":
-                            if (rgba != null) {
-                                Mat balancedFrame = whiteBlance.whitePatchReference(rgba);
-                                return balancedFrame;
-                            }
-                    }
-
 
                     if (canPerformAutoFocus()) {
                         customCamera.performAutoFocus(roi, cameraMotionDetecion, frameDifference);
                     }
 
+
+                    switch (wb_options) {
+                        case "WB Off":
+                            break;
+                        case "Gray World":
+                            rgba = WhiteBlance.applyGrayWorld(rgba);
+                        case "White Path":
+                            rgba = WhiteBlance.whitePatchReference(rgba);
+                    }
                     // take_capute image
                     boolean captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
                     if (captured){
