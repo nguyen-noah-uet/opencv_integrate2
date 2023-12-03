@@ -46,6 +46,7 @@ public class MainActivity extends CameraActivity{
     TextView sharpnessTV;
     TextView accelerometerTV;
     Button captureButton;
+    Button refreshAFButton;
     RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
     RadioGroup radioGroup;
     RadioGroup radioGroup2;
@@ -129,6 +130,7 @@ public class MainActivity extends CameraActivity{
         touchableView = findViewById(R.id.touchableView);
         accelerometerTV = findViewById(R.id.accelerometerTV);
         captureButton = findViewById(R.id.captureButton);
+        refreshAFButton = findViewById(R.id.refreshAFButton);
     }
 
     private void wireEvent() {
@@ -154,6 +156,13 @@ public class MainActivity extends CameraActivity{
                     customCamera.setAutoFocus(true);
                     focusDistanceSlider.setEnabled(false);
                 }
+            } catch (Exception e) {
+                Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+            }
+        });
+        refreshAFButton.setOnClickListener(v -> {
+            try {
+                customCamera.resetAutoFocus();
             } catch (Exception e) {
                 Log.e(TAG, Objects.requireNonNull(e.getMessage()));
             }
@@ -185,7 +194,7 @@ public class MainActivity extends CameraActivity{
 
                         } else if (i == R.id.radio_touch) {
                             options = "Touch";
-                            customCamera.setSkipFrameDefault(9);
+                            customCamera.setSkipFrameDefault(10);
 //                                    Log.d("test", "touch");
 
                         }
@@ -226,10 +235,10 @@ public class MainActivity extends CameraActivity{
                     try {
                         sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
                         focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
-                        if (vectorAcc > 0.5){
-                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
-                        }
+//                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
+//                        if (vectorAcc > 0.5){
+//                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+//                        }
                         accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
                     } catch (Exception e) {
                         Log.e(TAG, Objects.requireNonNull(e.getMessage()));
@@ -381,6 +390,8 @@ public class MainActivity extends CameraActivity{
                     // set back camera
                     customCamera.setCameraIndex(0);
                     Toast.makeText(this, "opencv loaded success....", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, String.format("width: %d, height: %d", customCamera.getMeasuredWidth(), customCamera.getMeasuredWidth()));
+                    Log.i(TAG, String.format("width: %d, height: %d", touchableView.getMeasuredWidth(), touchableView.getMeasuredWidth()));
 
                 } catch (Exception e) {
                     e.printStackTrace();
