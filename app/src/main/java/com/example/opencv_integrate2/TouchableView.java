@@ -59,9 +59,9 @@ public class TouchableView extends View {
 
                 touchableHeight = this.getHeight();
                 touchableWidth = this.getWidth();
-
-                Log.d("TocuhX", String.valueOf(touchX));
-                Log.d("TouchY", String.valueOf(touchY));
+//
+//                Log.d("TocuhX", String.valueOf(touchX));
+//                Log.d("TouchY", String.valueOf(touchY));
                 isTouched = true;
                 invalidate(); // Yêu cầu vẽ lại View
                 return true;
@@ -75,26 +75,25 @@ public class TouchableView extends View {
     }
 
     public Rect getRoi(Mat mat, int width, int height) {
-        int squareSize = 350; // Kích thước vuông
+        int squareSize = 200; // Kích thước vuông
         if (touchX == 0.0 && touchY == 0.0) {
             // Trả về hình vuông ở giữa màn hình
             int centerX = mat.width() / 2;
             int centerY = mat.height() / 2;
             return new Rect((int)(centerX - squareSize / 2), (int)(centerY - squareSize / 2), squareSize, squareSize);
         } else {
+                int touchXInt = (int) ((touchX / touchableWidth) * width);
+                int touchYInt = (int) ((touchY / touchableHeight) * height);
+                int tlx = touchXInt - squareSize / 2;
+                int tly = touchYInt - squareSize / 2 ;
 
-//            Log.d("Tagg",String.valueOf(touchableHeight));
-            int touchXInt = (int) ((touchX / touchableWidth) * width);
-            int touchYInt = (int) ((touchY / touchableHeight) * height);
-            int tlx = touchXInt - squareSize / 2;
-            int tly = touchYInt - squareSize / 2 ;
-
-//            Log.d("Width", String.valueOf(tlx));
-//            Log.d("Hêight", String.valueOf(tly));
+//            Log.d("Width", String.valueOf(touchableWidth));
+//            Log.d("Hêight", String.valueOf(touchableHeight));
 
 
 
-            return new Rect(tlx, tly, squareSize, squareSize);
+                return new Rect(tlx, tly, squareSize, squareSize);
+
         }
     }
 }

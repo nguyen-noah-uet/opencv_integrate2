@@ -194,11 +194,11 @@ public class MainActivity extends CameraActivity{
                             Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
                             break;
                         case "Touch":
-//                            runOnUiThread(() -> {
-//                                // Stuff that updates the UI
-//                                touchableView.setVisibility(View.VISIBLE);
-//
-//                            });
+                            runOnUiThread(() -> {
+                                // Stuff that updates the UI
+                                touchableView.setVisibility(View.VISIBLE);
+
+                            });
 //                            // width 480, height: 640
 ////                         dùng điều kiện của accelemeter để gọi roi
                             Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
@@ -206,28 +206,28 @@ public class MainActivity extends CameraActivity{
 //////                        Log.d("TAGGg", String.valueOf(roiRectTouch));
 ////
 //                            if (roiRectTouch != null) {
-//
 
-//                            if (roiRectTouch != null) {
-//
-//                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
-//                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
-//
-////                               Log.d("Test", String.valueOf(rgba.rows()));
-//
-//                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
-//                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
-//
-//
+
+                            if (roiRectTouch != null) {
+
+                                roiRectTouch.x = Math.max(0, roiRectTouch.x);
+                                roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
+
+//                               Log.d("Test", String.valueOf(rgba.rows()));
+
+                                roiRectTouch.y = Math.max(0, roiRectTouch.y);
+                                roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
+
+
 //
 //                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
-//
-////                               Log.d("Tesg", "tesg");
-//                                previousRoiTouch = roiRectTouch;
-//
-//                                roi = new Mat(I, roiRectTouch);
-//                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
-//                            }
+
+//                               Log.d("Tesg", "tesg");
+                                previousRoiTouch = roiRectTouch;
+
+                                roi = new Mat(I, roiRectTouch);
+                                Imgproc.rectangle(rgba, roiRectTouch.tl(), roiRectTouch.br(), new Scalar(0, 255, 255), 2);
+                            }
 
                             break;
                         default:

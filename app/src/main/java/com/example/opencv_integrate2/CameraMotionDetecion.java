@@ -13,6 +13,7 @@ import android.widget.Toast;
 public class CameraMotionDetecion implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor acceleroSensor;
+    private Sensor gyroSensor;
     private boolean isMotion = false;
     private float thresholdAcc = 0.5f;
     private float thresholdGyro = 1f;
@@ -26,9 +27,14 @@ public class CameraMotionDetecion implements SensorEventListener {
 
         if(sensorManager != null ){
             acceleroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if(acceleroSensor != null){
                 sensorManager.registerListener( this, acceleroSensor, SensorManager.SENSOR_DELAY_NORMAL);
             }
+            if(gyroSensor != null){
+                sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+
 
         }
     }
