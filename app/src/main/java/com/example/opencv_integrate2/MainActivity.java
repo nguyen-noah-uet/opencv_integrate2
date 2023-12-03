@@ -1,6 +1,6 @@
 package com.example.opencv_integrate2;
 
-import android.Manifest;;
+import android.Manifest;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -46,6 +46,9 @@ public class MainActivity extends CameraActivity{
     TextView sharpnessTV;
     TextView accelerometerTV;
     Button captureButton;
+    Button refreshAFButton;
+    RadioButton radioButtonFull, radioButtonObject, radioButtonTouch;
+
     RadioGroup radioGroup;
     RadioGroup radioGroup2;
     TouchableView touchableView;
@@ -71,6 +74,7 @@ public class MainActivity extends CameraActivity{
         touchableView = findViewById(R.id.touchableView);
         accelerometerTV = findViewById(R.id.accelerometerTV);
         captureButton = findViewById(R.id.captureButton);
+        refreshAFButton = findViewById(R.id.refreshAFButton);
     }
 
     private void wireEvent() {
@@ -100,10 +104,17 @@ public class MainActivity extends CameraActivity{
                 Log.e(TAG, Objects.requireNonNull(e.getMessage()));
             }
         });
+        refreshAFButton.setOnClickListener(v -> {
+            try {
+                customCamera.resetAutoFocus();
+            } catch (Exception e) {
+                Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+            }
+        });
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
             String options = "Full";
             String wb_options = "WB Off";
-            int boxSize = 200;
+            int boxSize = 400;
             Rect previousRoiTouch = null;
             int cameraViewWidth, camerViewHeight;
 
@@ -127,7 +138,7 @@ public class MainActivity extends CameraActivity{
 
                         } else if (i == R.id.radio_touch) {
                             options = "Touch";
-                            customCamera.setSkipFrameDefault(9);
+                            customCamera.setSkipFrameDefault(10);
 //                                    Log.d("test", "touch");
 
                         }
@@ -161,7 +172,6 @@ public class MainActivity extends CameraActivity{
 
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
-
                 frameDifference.checkFrameDifference(I);
 
                 float currentSharpness = customCamera.getCurrentSharpness();
@@ -170,10 +180,10 @@ public class MainActivity extends CameraActivity{
                     try {
                         sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
                         focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
-                        if (vectorAcc > 0.5){
-                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
-                        }
+                       float vectorAcc = cameraMotionDetecion.getValueAccVector();
+                       if (vectorAcc > 0.5){
+                           Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+                       }
                         accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
                     } catch (Exception e) {
                         Log.e(TAG, Objects.requireNonNull(e.getMessage()));
@@ -184,6 +194,7 @@ public class MainActivity extends CameraActivity{
                 try {
                     // rotate 90 degree
                     Core.rotate(rgba, rgba, Core.ROTATE_90_CLOCKWISE);
+                    Core.rotate(I, I, Core.ROTATE_90_CLOCKWISE);
                     Mat roi = null;
                     switch (options) {
                         case "Full":
@@ -195,18 +206,7 @@ public class MainActivity extends CameraActivity{
 //                            Rect roiRectFull = new Rect(left, top, width, height);
 //                            roi = new Mat(I, roiRectFull);
                             int scalePercent = 40;
-
-                            // Calculate the new dimensions
-                            int width = (int) (I.width() * scalePercent / 100.0);
-                            int height = (int) (I.height() * scalePercent / 100.0);
-
-                            // Create a Size object with the new dimensions
-                            Size dim = new Size(width, height);
-
-                            // Resize the image
-                            Mat resized = new Mat();
-                            Imgproc.resize(I, resized, dim, 0, 0, Imgproc.INTER_AREA);
-                            roi = resized;
+                            roi = Utils.scaleImg(I, scalePercent);
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
@@ -222,8 +222,9 @@ public class MainActivity extends CameraActivity{
                                 touchableView.setVisibility(View.VISIBLE);
 
                             });
+
                             // width 480, height: 640
-//                         dùng điều kiện của accelemeter để gọi roi
+                        // dùng điều kiện của accelemeter để gọi roi
                             Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
 
                             if (roiRectTouch != null) {
@@ -231,15 +232,14 @@ public class MainActivity extends CameraActivity{
                                 roiRectTouch.x = Math.max(0, roiRectTouch.x);
                                 roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
 
-//                               Log.d("Test", String.valueOf(rgba.rows()));
+                              Log.d("Test", String.valueOf(rgba.rows()));
 
                                 roiRectTouch.y = Math.max(0, roiRectTouch.y);
                                 roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
 
 
 
-                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
-
+//                                Log.d(TAG, String.format("x: %d, y: %d, width: %d, height: %d", roiRectTouch.x, roiRectTouch.y, roiRectTouch.width, roiRectTouch.height));
                                 previousRoiTouch = roiRectTouch;
 
                                 roi = new Mat(I, roiRectTouch);
@@ -273,8 +273,11 @@ public class MainActivity extends CameraActivity{
                     }
 
                     // take_capute image
-                    takeCapture = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
-
+                    boolean captured = customCamera.saveImageToGallery(getApplicationContext(),takeCapture, rgba);
+                    if (captured){
+                        takeCapture = false;
+                        Toast.makeText(getApplicationContext(), "Captured", Toast.LENGTH_SHORT).show();
+                    }
                     return rgba;
 
                 } catch (Exception e) {
@@ -286,16 +289,13 @@ public class MainActivity extends CameraActivity{
             }
         });
 
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (takeCapture == false){
-                    Log.i(TAG, String.format("True Capture"));
-                    takeCapture = true;
-                } else {
-                    Log.i(TAG, String.format("False Capture"));
-                    takeCapture = false;
-                }
+        captureButton.setOnClickListener(v -> {
+            if (!takeCapture){
+                Log.i(TAG, "True Capture");
+                takeCapture = true;
+            } else {
+                Log.i(TAG, "False Capture");
+                takeCapture = false;
             }
         });
 
@@ -331,6 +331,8 @@ public class MainActivity extends CameraActivity{
                     // set back camera
                     customCamera.setCameraIndex(0);
                     Toast.makeText(this, "opencv loaded success....", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, String.format("width: %d, height: %d", customCamera.getMeasuredWidth(), customCamera.getMeasuredWidth()));
+                    Log.i(TAG, String.format("width: %d, height: %d", touchableView.getMeasuredWidth(), touchableView.getMeasuredWidth()));
 
                 } catch (Exception e) {
                     e.printStackTrace();

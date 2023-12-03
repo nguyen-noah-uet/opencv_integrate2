@@ -33,9 +33,14 @@ public class CameraMotionDetecion implements SensorEventListener {
 
         if(sensorManager != null ){
             acceleroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if(acceleroSensor != null){
                 sensorManager.registerListener( this, acceleroSensor, SensorManager.SENSOR_DELAY_NORMAL);
             }
+            if(gyroSensor != null){
+                sensorManager.registerListener(this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+
 
             gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if(gyroscopeSensor != null) {

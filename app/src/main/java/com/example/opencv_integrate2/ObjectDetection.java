@@ -22,7 +22,7 @@ import java.util.List;
 
 public class ObjectDetection {
     private static final long DETECTION_INTERVAL = 200;
-    private static final long BACK_THRESHOLD = 2000;
+    private static final long BACK_THRESHOLD = 3000;
     private static final long STABLE_THRESHOLD = 10;
     private final CascadeClassifier faceCascade;
     private  Rect previousRect = null;
@@ -123,7 +123,7 @@ public class ObjectDetection {
         long currentTime = System.currentTimeMillis();
 
 
-        if(previousRect == null && currentTime - lastDetectionTime < DETECTION_INTERVAL) {
+        if(previousRect == null && currentTime - lastDetectionTime < DETECTION_INTERVAL && md.getIsMotion() == false) {
             int centerX = mRgba.cols() / 2;
             int centerY = mRgba.rows() / 2;
             int rectWidth = 200;
@@ -162,7 +162,8 @@ public class ObjectDetection {
 //            Imgproc.rectangle(mRgba, face.tl(), face.br(), new Scalar(0, 255, 0), 2);
 //
 //        }
-
+        lastDetectionTime = currentTime;
+        md.setIsMotion(false);
 
         Rect closestRegion = null;
 
@@ -178,20 +179,32 @@ public class ObjectDetection {
                 closestRegion.y = Math.max(0, closestRegion.y);
                 closestRegion.y = Math.min(width - closestRegion.height, closestRegion.y);
 
+                if(Math.abs(previousRect.x - closestRegion.x) < STABLE_THRESHOLD && Math.abs(previousRect.y - closestRegion.y) < STABLE_THRESHOLD){
+                    return previousRect;
+                }
 
                 previousRect = closestRegion;
 
 
             }
+        }else{
+
+            int centerX1 = mRgba.cols() / 2;
+            int centerY1 = mRgba.rows() / 2;
+            int rectWidth = 200;
+            int rectHeight = 200;
+
+            int x = centerX1 - rectWidth / 2;
+            int y = centerY1 - rectHeight / 2;
+            Rect newRect = new Rect(x, y, rectWidth, rectHeight);
+            previousRect = newRect;
+
+            return newRect;
         }
-        lastDetectionTime = currentTime;
-        md.setIsMotion(false);
+
 
         // tìm được thành công vật hoặc người/
 
-        if(Math.abs(previousRect.x - closestRegion.x) < STABLE_THRESHOLD && Math.abs(previousRect.y - closestRegion.y) < STABLE_THRESHOLD){
-            return previousRect;
-        }
 
         return closestRegion;
     }

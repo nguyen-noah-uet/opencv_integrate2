@@ -213,29 +213,29 @@ public class CustomCamera extends JavaCamera2View {
 
                         // remove key=10.0
                         sharpnessTable.remove(10.00f);
+                        float finalFocusDistance = 0.0f;
 
-//                        Map.Entry<Float, Float> maxEntry1 = null;
-//                        Map.Entry<Float, Float> maxEntry2 = null;
-//                        for (Map.Entry<Float, Float> entry : sharpnessTable.entrySet()) {
-//                            if (maxEntry1 == null || entry.getValue().compareTo(maxEntry1.getValue()) > 0) {
-//                                maxEntry2 = maxEntry1;
-//                                maxEntry1 = entry;
-//                            } else if (maxEntry2 == null || entry.getValue().compareTo(maxEntry2.getValue()) > 0) {
-//                                maxEntry2 = entry;
-//                            }
-//                        }
-//                        float finalFocusDistance = (maxEntry1.getKey() + maxEntry2.getKey()) / 2;
-//                        setFocusDistance(finalFocusDistance);
-//                        Log.i(TAG, String.format(Locale.ENGLISH, "Set final focusDistance: %.2f", finalFocusDistance));
-
-                        // find max sharpness
-                        Map.Entry<Float, Float> maxEntry = null;
+                        // take average of 2 latest focus distances
+                        Map.Entry<Float, Float> maxEntry1 = null;
+                        Map.Entry<Float, Float> maxEntry2 = null;
                         for (Map.Entry<Float, Float> entry : sharpnessTable.entrySet()) {
-                            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
-                                maxEntry = entry;
+                            if (maxEntry1 == null || entry.getValue().compareTo(maxEntry1.getValue()) > 0) {
+                                maxEntry2 = maxEntry1;
+                                maxEntry1 = entry;
+                            } else if (maxEntry2 == null || entry.getValue().compareTo(maxEntry2.getValue()) > 0) {
+                                maxEntry2 = entry;
                             }
                         }
-                        float finalFocusDistance = maxEntry.getKey();
+                        finalFocusDistance = (maxEntry1.getKey() + maxEntry2.getKey()) / 2;
+
+//                        // find max sharpness
+//                        Map.Entry<Float, Float> maxEntry = null;
+//                        for (Map.Entry<Float, Float> entry : sharpnessTable.entrySet()) {
+//                            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+//                                maxEntry = entry;
+//                            }
+//                        }
+//                        finalFocusDistance = maxEntry.getKey();
                         setFocusDistance(finalFocusDistance);
                         Log.i(TAG, String.format(Locale.ENGLISH, "Set final focusDistance: %.2f", finalFocusDistance));
 
@@ -329,18 +329,18 @@ public class CustomCamera extends JavaCamera2View {
 
                     // Add image to the gallery
                     galleryAddPic(context, file);
+                    return true;
 
                 } else {
                     Log.e(TAG, "Failed to create directory");
                 }
 
-                takeCapture = false;
             } else {
                 Log.e(TAG, "External storage not available");
             }
             takeCapture = false;
         }
-        return takeCapture;
+        return false;
     }
 
     private boolean isExternalStorageWritable() {
