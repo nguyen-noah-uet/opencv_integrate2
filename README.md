@@ -19,6 +19,10 @@
 - Cân bằng trắng tự động
   - Gray-world algorithm
   - White patch reference
+- Các chế độ cân bằng trắng theo nhiệt độ K
+  - Daylight
+  - Shade
+  - Tungsten
 
 ## 3. Screenshots
  - Ảnh chưa được lấy nét
@@ -38,6 +42,13 @@
   ![white_balance_gray_world.jpg](Images%2Fwhite_balance_gray_world.jpg)
  - Ảnh cân bằng trắng (White patch reference)
   ![white_balance_white_patch.jpg](Images%2Fwhite_balance_white_patch.jpg)
+ - Ảnh cân bằng trắng theo nhiệt độ K
+   - Daylight
+   ![daylight.jpg](Images%2Fdaylight.jpg)
+   - Shade
+   ![shade.jpg](Images%2Fdaylight.jpg)
+   - Tungsten
+   ![tungsten.jpg](Images%2Ftungsten.jpg)
 
 ## 4. Video demo
 - Auto Focus
