@@ -268,7 +268,7 @@ public class MainActivity extends CameraActivity{
                             touchableView.setVisibility(View.INVISIBLE);
                             Rect roiRect = ob.CascadeRec(rgba, cameraMotionDetecion);
 
-//                            roi = new Mat(rgba, roiRect);
+                            roi = new Mat(I, roiRect);
                             /// xử lý roi ở đây
                             Imgproc.rectangle(rgba, roiRect.tl(), roiRect.br(), new Scalar(0, 255, 255), 2);
                             break;
