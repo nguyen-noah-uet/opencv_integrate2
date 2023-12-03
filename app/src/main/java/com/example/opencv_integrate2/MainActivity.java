@@ -170,7 +170,7 @@ public class MainActivity extends CameraActivity{
         customCamera.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
             String options = "Full";
             String wb_options = "WB Off";
-            int boxSize = 200;
+            int boxSize = 400;
             Rect previousRoiTouch = null;
             int cameraViewWidth, camerViewHeight;
 
