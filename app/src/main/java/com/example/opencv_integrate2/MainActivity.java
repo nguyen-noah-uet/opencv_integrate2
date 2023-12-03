@@ -290,7 +290,7 @@ public class MainActivity extends CameraActivity{
                             });
 
                             // width 480, height: 640
-                        dùng điều kiện của accelemeter để gọi roi
+                        // dùng điều kiện của accelemeter để gọi roi
                             Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
 
                             if (roiRectTouch != null) {
