@@ -229,16 +229,17 @@ public class MainActivity extends CameraActivity{
                 Mat rgba = inputFrame.rgba();
                 Mat I = inputFrame.gray();
 
+
                 float currentSharpness = customCamera.getCurrentSharpness();
                 float focusDistance = customCamera.getFocusDistance();
                 runOnUiThread(() -> {
                     try {
                         sharpnessTV.setText(String.format(Locale.ENGLISH, "Sharpness: %.2f", currentSharpness));
                         focusDistanceTV.setText(String.format(Locale.ENGLISH, "Focus distance: %.2f", focusDistance));
-//                        float vectorAcc = cameraMotionDetecion.getValueAccVector();
-//                        if (vectorAcc > 0.5){
-//                            Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
-//                        }
+                       float vectorAcc = cameraMotionDetecion.getValueAccVector();
+                       if (vectorAcc > 0.5){
+                           Log.i(TAG, String.format("vectorAcc: %.2f", vectorAcc));
+                       }
                         accelerometerTV.setText(String.format((Locale.ENGLISH), "Acceleroment: %.2f", cameraMotionDetecion.getValueAccVector() ));
                     } catch (Exception e) {
                         Log.e(TAG, Objects.requireNonNull(e.getMessage()));
@@ -275,7 +276,7 @@ public class MainActivity extends CameraActivity{
                             break;
                         case "Object":
                             touchableView.setVisibility(View.INVISIBLE);
-                            Rect roiRect = ob.CascadeRec(rgba, md);
+                            Rect roiRect = ob.CascadeRec(rgba, cameraMotionDetecion);
 
 //                            roi = new Mat(rgba, roiRect);
                             /// xử lý roi ở đây
@@ -287,8 +288,9 @@ public class MainActivity extends CameraActivity{
                                 touchableView.setVisibility(View.VISIBLE);
 
                             });
+
                             // width 480, height: 640
-//                         dùng điều kiện của accelemeter để gọi roi
+                        dùng điều kiện của accelemeter để gọi roi
                             Rect roiRectTouch = touchableView.getRoi(I, cameraViewWidth, camerViewHeight);
 
                             if (roiRectTouch != null) {
@@ -296,7 +298,7 @@ public class MainActivity extends CameraActivity{
                                 roiRectTouch.x = Math.max(0, roiRectTouch.x);
                                 roiRectTouch.x = Math.min(cameraViewWidth - boxSize, roiRectTouch.x);
 
-//                               Log.d("Test", String.valueOf(rgba.rows()));
+                              Log.d("Test", String.valueOf(rgba.rows()));
 
                                 roiRectTouch.y = Math.max(0, roiRectTouch.y);
                                 roiRectTouch.y = Math.min(camerViewHeight - boxSize, roiRectTouch.y);
