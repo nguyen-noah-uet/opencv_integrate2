@@ -46,7 +46,7 @@
    - Daylight
    ![daylight.jpg](Images%2Fdaylight.jpg)
    - Shade
-   ![shade.jpg](Images%2Fdaylight.jpg)
+   ![shade.jpg](Images%2Fshade.jpg)
    - Tungsten
    ![tungsten.jpg](Images%2Ftungsten.jpg)
 
