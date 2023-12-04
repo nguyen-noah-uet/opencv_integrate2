@@ -124,7 +124,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="92dp"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -148,6 +148,27 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="White Path" />
+
+        <RadioButton
+            android:id="@+id/day_light"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Daylight" />
+
+        <RadioButton
+            android:id="@+id/shade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Shade" />
+
+        <RadioButton
+            android:id="@+id/tungsten"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tungsten" />
     </RadioGroup>
 
     <Button

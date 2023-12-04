@@ -249,6 +249,7 @@ public class CustomCamera extends JavaCamera2View {
                 }
                 return;
             case FOCUSED:
+
                 if(cameraMotionDetecion.getIsMotion() ){
                     resetAutoFocus();
                 } else if(frameDifference.getIsMotionFrame()) {
