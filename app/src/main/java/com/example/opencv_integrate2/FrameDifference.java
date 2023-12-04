@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 public class FrameDifference {
@@ -15,7 +16,7 @@ public class FrameDifference {
     Mat curr_gray, prev_gray, diff;
     boolean is_init;
     boolean reset;
-    private double thresholdPixelsDiff = 0.1;
+    private int thresholdPixelsDiff = 100000;
     private boolean isMotionFrame = false;
     FrameDifference() {
         boolean resetFrameDifference = false;
@@ -59,11 +60,11 @@ public class FrameDifference {
         Imgproc.threshold(diff, diff, 40, 255, Imgproc.THRESH_BINARY);
         int numPixelsDiff = Core.countNonZero(diff);
 
-        if (numPixelsDiff > 100000 && !reset) {
+        if (numPixelsDiff > thresholdPixelsDiff && !reset) {
             setIsMotionFrame(true);
             Log.i(TAG, String.format("Pixels Different: %d", numPixelsDiff));
             reset = true;
-        } else if (numPixelsDiff <= 100000 && reset) {
+        } else if (numPixelsDiff <= thresholdPixelsDiff && reset) {
             resetFrameDetection();
         }
 
